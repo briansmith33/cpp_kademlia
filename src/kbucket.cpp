@@ -323,6 +323,10 @@ std::vector<Peer> KBucket::timeHeap(std::vector<Peer> heap, int n, int i) {
     }
 }
 
+Peer KBucket::oldest() {
+    return timeHeap()[0];
+}
+
 std::vector<std::tuple<std::string, int, time_t>> KBucket::asTuples() {
     std::vector<std::tuple<std::string, int, time_t>> peer_tuples;
     for (auto &peer : preOrder()) {

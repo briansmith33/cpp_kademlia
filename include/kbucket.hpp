@@ -51,6 +51,8 @@ struct KBucket {
 
     std::vector<Peer> timeSort();
 
+    Peer oldest();
+
     std::vector<Peer> timeHeap();
 
 
