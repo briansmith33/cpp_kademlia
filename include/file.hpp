@@ -1,4 +1,6 @@
 #pragma once
+#include <tuple>
+#include <sstream>
 
 struct File {
     File();
@@ -8,6 +10,8 @@ struct File {
     std::string   filename;
     long long int file_size;
     time_t        published_on;
-    
+
     std::tuple<long long int, long long int, std::string, long long int, time_t> asTuple();
+    
+    void fromTuple(std::tuple<long long int, long long int, std::string, long long int, time_t> file_tuple);
 };

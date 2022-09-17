@@ -52,9 +52,9 @@ struct KBucket {
 
     std::vector<Peer> timeSort();
 
-    Peer oldest();
+    std::vector<Peer> timeHeap(std::vector<Peer> heap, int n, int i);
 
-    std::vector<Peer> timeHeap();
+    Peer oldest();
 
     std::vector<std::tuple<std::string, int, time_t>> asTuples();
 };
