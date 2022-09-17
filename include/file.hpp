@@ -2,5 +2,12 @@
 
 struct File {
     File();
-    std::tuple<std::string, std::string> asTuple();
+
+    long long int file_id;
+    long long int owner_id;
+    std::string   filename;
+    long long int file_size;
+    time_t        published_on;
+    
+    std::tuple<long long int, long long int, std::string, long long int, time_t> asTuple();
 };

@@ -1,5 +1,6 @@
 #include "../include/peer.hpp"
 #include "../include/network.hpp"
+#include <format>
 
 Peer::Peer() {}
 
@@ -104,11 +105,18 @@ std::tuple<std::string, std::string> Peer::findNode(std::string target, int port
 }
 
 std::tuple<std::string, std::string> Peer::store(File file, int port) {
-    std::string key;
-    std::string value;
-    std::tie(key, value) = file.asTuple();
+    long long int file_id;
+    long long int owner_id;
+    std::string   filename;
+    long long int file_size;
+    time_t        published_on;
+    
+    std::tie(file_id, owner_id, filename, file_size, published_on) = file.asTuple();
 
-    return sendReceive(port, "store", key+":"+value);
+    std::ostringstream msg;
+    msg << file_id << ":" << owner_id << ":" << filename << ":" << file_size << ":" << published_on;
+    
+    return sendReceive(port, "store", msg.str());
 }
 
 std::tuple<std::string, std::string> Peer::findValue(std::string target, int port) {

@@ -324,7 +324,7 @@ std::vector<Peer> KBucket::timeHeap(std::vector<Peer> heap, int n, int i) {
 }
 
 Peer KBucket::oldest() {
-    return timeHeap()[0];
+    return timeSort()[0];
 }
 
 std::vector<std::tuple<std::string, int, time_t>> KBucket::asTuples() {

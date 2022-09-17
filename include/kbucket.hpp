@@ -6,11 +6,12 @@
 
 struct KBucket {
     KBucket();
-    Peer* root;
+
+    Peer*    root;
     KBucket* next;
     KBucket* prev;
-    int k_nodes;
-    int alpha;
+    int      k_nodes;
+    int      alpha;
 
     void addPeer(Peer new_peer);
     void addPeer(Peer new_peer, Peer current);
@@ -54,7 +55,6 @@ struct KBucket {
     Peer oldest();
 
     std::vector<Peer> timeHeap();
-
 
     std::vector<std::tuple<std::string, int, time_t>> asTuples();
 };
