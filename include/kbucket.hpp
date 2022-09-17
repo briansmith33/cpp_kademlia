@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <ctime>
 #include "peer.hpp"
 
 
@@ -39,6 +40,19 @@ struct KBucket {
 
     std::tuple<KBucket, KBucket> split();
 
+    std::vector<Peer> preOrder();
+    std::vector<Peer> preOrder(std::vector<Peer> peer_list, Peer current);
+
     std::vector<Peer> inOrder();
-    std::vector<Peer> inOrder(std::vector<Peer>, Peer current);
+    std::vector<Peer> inOrder(std::vector<Peer>peer_list, Peer current);
+
+    std::vector<Peer> postOrder();
+    std::vector<Peer> postOrder(std::vector<Peer>peer_list, Peer current);
+
+    std::vector<Peer> timeSort();
+
+    std::vector<Peer> timeHeap();
+
+
+    std::vector<std::tuple<std::string, int, time_t>> asTuples();
 };

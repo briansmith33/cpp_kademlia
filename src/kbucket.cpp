@@ -227,6 +227,25 @@ std::tuple<KBucket, KBucket> KBucket::split() {
     return std::tuple(k1, k2);
 }
 
+std::vector<Peer> KBucket::preOrder() {
+    std::vector<Peer> peer_list;
+    return inOrder(peer_list, *root);
+}
+
+std::vector<Peer> KBucket::preOrder(std::vector<Peer> peer_list, Peer current) {
+    if (&current == nullptr) {
+        return {Peer(-1)};
+    }
+    peer_list.push_back(current);
+    if (current.left != nullptr) {
+       inOrder(peer_list, *current.left);
+    }
+    if (current.right != nullptr) {
+        inOrder(peer_list, *current.right);
+    }
+    return peer_list;
+}
+
 std::vector<Peer> KBucket::inOrder() {
     std::vector<Peer> peer_list;
     return inOrder(peer_list, *root);
@@ -246,3 +265,68 @@ std::vector<Peer> KBucket::inOrder(std::vector<Peer> peer_list, Peer current) {
     return peer_list;
 }
 
+std::vector<Peer> KBucket::postOrder() {
+    std::vector<Peer> peer_list;
+    return postOrder(peer_list, *root);
+}
+
+std::vector<Peer> KBucket::postOrder(std::vector<Peer> peer_list, Peer current) {
+    if (&current == nullptr) {
+        return {Peer(-1)};
+    }
+    if (current.left != nullptr) {
+       postOrder(peer_list, *current.left);
+    }
+    
+    if (current.right != nullptr) {
+        postOrder(peer_list, *current.right);
+    }
+    peer_list.push_back(current);
+
+    return peer_list;
+}
+
+std::vector<Peer> KBucket::timeSort() {
+    std::vector<Peer> peers = inOrder();
+    int n = size();
+    for (int i = std::round(n / 2); i >= 0; i--) {
+        peers = timeHeap(peers, n, i);
+    }
+
+    for (int i = n - 1; i > 0; i--) {
+        Peer temp = peers[i];
+        peers[i] = peers[0];
+        peers[0] = temp;
+        peers = timeHeap(peers, i, 0);
+    }
+    return peers;
+}
+
+std::vector<Peer> KBucket::timeHeap(std::vector<Peer> heap, int n, int i) {
+    int largest = i;
+    int left = 2 * i + 1;
+    int right = 2 * i + 2;
+
+    if (left < n && heap[i].last_seen < heap[left].last_seen) {
+        largest = left;
+    }
+
+    if (right < n && heap[largest].last_seen < heap[right].last_seen) {
+        largest = right;
+    }
+
+    if (largest != i) {
+        Peer temp = heap[i];
+        heap[i] = heap[largest];
+        heap[largest] = temp;
+        timeHeap(heap, n, largest);
+    }
+}
+
+std::vector<std::tuple<std::string, int, time_t>> KBucket::asTuples() {
+    std::vector<std::tuple<std::string, int, time_t>> peer_tuples;
+    for (auto &peer : preOrder()) {
+        peer_tuples.push_back(peer.asTuple());
+    }
+    return peer_tuples;
+}
