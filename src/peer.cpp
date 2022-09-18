@@ -1,6 +1,5 @@
 #include "../include/peer.hpp"
 #include "../include/network.hpp"
-#include <format>
 
 Peer::Peer() {}
 

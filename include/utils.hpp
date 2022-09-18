@@ -10,3 +10,4 @@ struct Stack {
     bool isEmpty();
     Peer peek();
 };
+

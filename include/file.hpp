@@ -1,17 +1,20 @@
 #pragma once
 #include <tuple>
 #include <sstream>
+#include <ctime>
 
 struct File {
     File();
+    File(std::string filename, long long int peer_id);
 
     long long int file_id;
     long long int owner_id;
     std::string   filename;
     long long int file_size;
+    std::string   hash;
     time_t        published_on;
 
     std::tuple<long long int, long long int, std::string, long long int, time_t> asTuple();
-    
+
     void fromTuple(std::tuple<long long int, long long int, std::string, long long int, time_t> file_tuple);
 };
