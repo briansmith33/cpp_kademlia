@@ -29,7 +29,7 @@ struct Peer {
 
     std::tuple<std::string, std::string> findNode(std::string, int);
 
-    std::tuple<std::string, std::string> store(FileBlob*, int);
+    std::tuple<std::string, std::string> store(File*, int);
 
     std::tuple<std::string, std::string> findValue(std::string, int);
 

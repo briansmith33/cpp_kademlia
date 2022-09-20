@@ -3,9 +3,9 @@
 #include <sstream>
 #include <ctime>
 
-struct FileBlob {
-    FileBlob();
-    FileBlob(std::string filename, std::string peer_id);
+struct File {
+    File();
+    File(std::string filename, std::string peer_id);
 
     std::string   file_id;
     std::string   owner_id;

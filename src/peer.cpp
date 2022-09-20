@@ -119,7 +119,7 @@ std::tuple<std::string, std::string> Peer::findNode(std::string target, int port
     return sendReceive(port, "find_node", target);
 }
 
-std::tuple<std::string, std::string> Peer::store(FileBlob* file, int port) {
+std::tuple<std::string, std::string> Peer::store(File* file, int port) {
     
     std::string   file_id;
     std::string   owner_id;
