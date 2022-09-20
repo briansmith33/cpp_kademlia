@@ -5,42 +5,40 @@
 struct BucketList {
     BucketList();
 
-    KBucket head;
+    KBucket* head;
     int k_nodes;
 
-    void append(KBucket bucket);
+    int len();
 
-    void prepend(KBucket bucket);
+    void append(KBucket* bucket);
 
-    void addPeer(int port, Peer peer);
+    void prepend(KBucket* bucket);
 
-    Peer findPeer(long long int peer_id);
+    void addPeer(int port, Peer* peer);
 
-    void insert(KBucket bucket);
+    Peer* findPeer(std::string peer_id);
 
-    void addAfterPeer(long long int peer_id, KBucket bucket);
+    void insert(KBucket* bucket);
 
-    void addBeforePeer(long long int peer_id, KBucket bucket);
+    void addAfterPeer(std::string peer_id, KBucket* bucket);
 
-    void removeBucket(KBucket bucket);
+    void addBeforePeer(std::string peer_id, KBucket* bucket);
 
-    KBucket findBucket(long long int bucket_id);
+    void removeBucket(KBucket* bucket);
 
-    KBucket findClosest(long long int bucket_id);
+    KBucket* findBucket(std::string bucket_id);
+
+    KBucket* findClosest(std::string bucket_id);
 
     void reverse();
 
     void removeDuplicates();
 
-    BucketList splitList();
+    std::vector<KBucket*> list();
 
-    BucketList sort();
+    std::vector<Peer*> listPeers();
 
-    std::vector<KBucket> list();
-
-    std::vector<Peer> listPeers();
-
-    std::vector<std::tuple<std::string, int>> asTuples();
+    std::vector<std::tuple<std::string, int, time_t>> asTuples();
 
     void printList();
 };

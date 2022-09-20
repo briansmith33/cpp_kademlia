@@ -1,17 +1,19 @@
 #include "kbucket.cpp"
 #include "peer.cpp"
-#include "utils.cpp"
+#include <bitset>
 
- 
+
 int main() {
-
+	std::string hash1 = sha256("192.168.1.9");
+	std::string hash2 = sha256("127.0.0.1");
+    
     KBucket bucket = KBucket();
-    Peer peer1 = Peer(65389757258397095);
-    Peer peer2 = Peer(83256023750982500);
-    bucket.addPeer(peer1);
-    bucket.addPeer(peer2);
-    Peer found = bucket.findPeer(83256023750982500);
-    found.print();
-
+    Peer peer1 = Peer(hash1);
+    Peer peer2 = Peer(hash2);
+    bucket.addPeer(&peer1);
+    bucket.addPeer(&peer2);
+    Peer* found = bucket.findPeer(hash2);
+    found->print();
+    
     return EXIT_SUCCESS;
 }

@@ -5,9 +5,9 @@
 
 struct Peer {
     Peer();
-    Peer(long long int id);
+    Peer(std::string id);
 
-    long long int id;
+    std::string   id;
     Peer*         left;
     Peer*         right;
     std::string   host;
@@ -29,7 +29,7 @@ struct Peer {
 
     std::tuple<std::string, std::string> findNode(std::string target, int port);
 
-    std::tuple<std::string, std::string> store(File file, int port);
+    std::tuple<std::string, std::string> store(File& file, int port);
 
     std::tuple<std::string, std::string> findValue(std::string target, int port);
 
