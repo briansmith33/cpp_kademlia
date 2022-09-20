@@ -19,23 +19,23 @@ struct Peer {
 
     std::tuple<std::string, int> address();
 
-    bool send(int port, std::string header, std::string message);
+    bool send(int, std::string, std::string);
 
     std::tuple<std::string, std::string> receive();
 
-    std::tuple<std::string, std::string> sendReceive(int port, std::string header, std::string message);
+    std::tuple<std::string, std::string> sendReceive(int, std::string, std::string);
 
-    bool ping(int port);
+    bool ping(int);
 
-    std::tuple<std::string, std::string> findNode(std::string target, int port);
+    std::tuple<std::string, std::string> findNode(std::string, int);
 
-    std::tuple<std::string, std::string> store(File& file, int port);
+    std::tuple<std::string, std::string> store(FileBlob*, int);
 
-    std::tuple<std::string, std::string> findValue(std::string target, int port);
+    std::tuple<std::string, std::string> findValue(std::string, int);
 
-    std::tuple<std::string, std::string> getValue(std::string target, int port);
+    std::tuple<std::string, std::string> getValue(std::string, int);
 
-    bool isOlderThan(int seconds);
+    bool isOlderThan(int);
 
     void print();
 };

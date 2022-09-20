@@ -1,5 +1,6 @@
 #include "../include/peer.hpp"
-//#include "../include/network.hpp"
+#include "network.cpp"
+#include "file.cpp"
 
 Peer::Peer() {}
 
@@ -19,7 +20,6 @@ std::tuple<std::string, int, time_t> Peer::asTuple() {
 }
 
 bool Peer::send(int port, std::string header, std::string message) {
-    /*
     try
     {
         WSASession Session;
@@ -33,12 +33,11 @@ bool Peer::send(int port, std::string header, std::string message) {
         std::cout << ex.what();
         return false;
     }
-    */
+    
     return true;
 }
 
 std::tuple<std::string, std::string> Peer::receive() {
-    /*
     try
     {
         WSASession Session;
@@ -56,12 +55,11 @@ std::tuple<std::string, std::string> Peer::receive() {
         std::cout << ex.what();
         return std::tuple<std::string, std::string>("", "");
     }
-    */
+    
     return std::tuple<std::string, std::string>("", "");
 }
 
 std::tuple<std::string, std::string> Peer::sendReceive(int port, std::string header, std::string message) {
-    /*
     try
     {
         WSASession Session;
@@ -82,12 +80,12 @@ std::tuple<std::string, std::string> Peer::sendReceive(int port, std::string hea
         std::cout << ex.what();
         return std::tuple<std::string, std::string>("", "");
     }
-    */
+    
     return std::tuple<std::string, std::string>("", "");
 }
 
 bool Peer::ping(int port) {
-    /*
+    
     try
     {
         WSASession Session;
@@ -113,7 +111,7 @@ bool Peer::ping(int port) {
     {
         return false;
     }
-    */
+    
    return true;
 }
 
@@ -121,19 +119,20 @@ std::tuple<std::string, std::string> Peer::findNode(std::string target, int port
     return sendReceive(port, "find_node", target);
 }
 
-std::tuple<std::string, std::string> Peer::store(File& file, int port) {
-    /*
-    long long int file_id;
-    long long int owner_id;
+std::tuple<std::string, std::string> Peer::store(FileBlob* file, int port) {
+    
+    std::string   file_id;
+    std::string   owner_id;
     std::string   filename;
     long long int file_size;
     time_t        published_on;
-    
-    std::tie(file_id, owner_id, filename, file_size, published_on) = file.asTuple();
+    std::tuple<std::string, std::string, std::string, long long int, time_t> file_tuple;
+    file_tuple = file->asTuple();
+    std::tie(file_id, owner_id, filename, file_size, published_on) = file_tuple;
 
     std::ostringstream msg;
     msg << file_id << ":" << owner_id << ":" << filename << ":" << file_size << ":" << published_on;
-    */
+    
     
     return sendReceive(port, "store", ""/*msg.str()*/);
 }

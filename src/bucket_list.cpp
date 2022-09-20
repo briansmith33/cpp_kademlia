@@ -1,5 +1,4 @@
 #include "../include/bucket_list.hpp"
-#include "big_int.cpp"
 #include "utils.cpp"
 
 BucketList::BucketList() {}

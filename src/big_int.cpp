@@ -1,12 +1,5 @@
 #include "../include/big_int.hpp"
 
-class myexception: public exception
-{
-  virtual const char* what() const throw()
-  {
-    return "My exception happened";
-  }
-} myex;
 
 BigInt::BigInt(string& s){
 	int n = s.size();

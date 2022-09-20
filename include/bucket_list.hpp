@@ -10,25 +10,25 @@ struct BucketList {
 
     int len();
 
-    void append(KBucket* bucket);
+    void append(KBucket*);
 
-    void prepend(KBucket* bucket);
+    void prepend(KBucket*);
 
-    void addPeer(int port, Peer* peer);
+    void addPeer(int, Peer*);
 
-    Peer* findPeer(std::string peer_id);
+    Peer* findPeer(std::string);
 
-    void insert(KBucket* bucket);
+    void insert(KBucket*);
 
-    void addAfterPeer(std::string peer_id, KBucket* bucket);
+    void addAfterPeer(std::string, KBucket*);
 
-    void addBeforePeer(std::string peer_id, KBucket* bucket);
+    void addBeforePeer(std::string, KBucket*);
 
-    void removeBucket(KBucket* bucket);
+    void removeBucket(KBucket*);
 
-    KBucket* findBucket(std::string bucket_id);
+    KBucket* findBucket(std::string);
 
-    KBucket* findClosest(std::string bucket_id);
+    KBucket* findClosest(std::string);
 
     void reverse();
 

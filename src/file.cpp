@@ -1,12 +1,12 @@
 #include "../include/file.hpp"
 #include <fstream>
 #include <string>
-#include "utils.cpp"
 
 
-File::File() {}
 
-File::File(std::string f, long long int peer_id) {
+FileBlob::FileBlob() {}
+
+FileBlob::FileBlob(std::string f, std::string peer_id) {
     
     std::ifstream file(f);
     std::string text; 
@@ -25,10 +25,10 @@ File::File(std::string f, long long int peer_id) {
     published_on = time(NULL);
 }
 
-std::tuple<long long int, long long int, std::string, long long int, time_t> File::asTuple() {
-    return std::tuple<long long int, long long int, std::string, long long int, time_t>(file_id, owner_id, filename, file_size, published_on);
+std::tuple<std::string, std::string, std::string, long long int, time_t> FileBlob::asTuple() {
+    return std::tuple<std::string, std::string, std::string, long long int, time_t>(file_id, owner_id, filename, file_size, published_on);
 }
 
-void File::fromTuple(std::tuple<long long int, long long int, std::string, long long int, time_t> file_tuple) {
+void FileBlob::fromTuple(std::tuple<std::string, std::string, std::string, long long int, time_t> file_tuple) {
     std::tie(file_id, owner_id, filename, file_size, published_on) = file_tuple;
 }

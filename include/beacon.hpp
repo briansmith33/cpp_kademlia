@@ -1,7 +1,7 @@
 #pragma once
-#include <sstream>
 #include "bucket_list.hpp"
 #include "event_chain.hpp"
+#include <sstream>
 
 struct Beacon {
     Beacon();
