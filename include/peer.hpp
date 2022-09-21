@@ -6,17 +6,17 @@
 #include "utils.hpp"
 
 enum MsgType {
-    Ping = 0, Pong, FindPeer, FindFile, GetFile, StoreFile, Found, NotFound
+    Ping = 0, Pong, FindPeer, FindFile, GetFile, StoreFile, Stored, Found, NotFound
 };
 
 struct Peer {
     Peer();
-    Peer(char* host);
+    Peer(const char* host);
 
     std::string id;
     Peer*       left;
     Peer*       right;
-    char*       host;
+    const char* host;
     int         port;
     time_t      last_seen;
     int         buffer_size;

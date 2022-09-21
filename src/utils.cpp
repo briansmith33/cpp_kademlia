@@ -218,3 +218,7 @@ static const char reverse_table[128] = {
    }
    return retval;
 }
+
+void joinMessage(std::string peer_id) {
+    std::cout << "\n" << peer_id << " joined!\n>> ";
+}

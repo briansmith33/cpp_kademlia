@@ -18,7 +18,7 @@ struct Beacon {
     int                 buffer_size;
     int                 alpha;
 
-    void send(sockaddr_in addr, MsgType msg_type, std::string message);
+    void send(sockaddr_in addr, MsgType msg_type, std::string message = "");
 
     std::tuple<MsgType, std::string, sockaddr_in> receive();
 

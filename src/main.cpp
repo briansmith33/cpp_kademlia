@@ -7,10 +7,15 @@
 int main() {
     
     KBucket<Peer> bucket;
-    Peer peer1 = Peer("192.168.1.9");
-    Peer peer2 = Peer("127.0.0.1");
+    std::string addr1 = "192.168.1.9";
+    std::string addr2 = "127.0.0.1";
+    Peer peer1 = Peer(addr1.c_str());
+    Peer peer2 = Peer(addr2.c_str());
     bucket.addNode(&peer1);
     bucket.addNode(&peer2);
-
+    
+    Peer* found = bucket.findNode(peer2.id);
+    found->print();
+    
     return EXIT_SUCCESS;
 }

@@ -1,5 +1,6 @@
 #include "../include/beacon.hpp"
 #include "network.cpp"
+#include "utils.cpp"
 
 WSASession Session;
 UDPSocket Socket;
@@ -201,16 +202,35 @@ File* Beacon::findValue(std::string key) {
             std::string   filename = file_vector[2];
             
             time_t        published_on = pub_time;
-            found.fromTuple(std::tuple<std::string, std::string, std::string, long long int, time_t>(file_id, owner_id, filename, file_size, published_on));
+            std::tuple<std::string, std::string, std::string, long long int, time_t> file_tuple(
+                    file_id, 
+                    owner_id, 
+                    filename, 
+                    file_size, 
+                    published_on);
+            found.fromTuple(file_tuple);
         }
     }
     if (&found.id != nullptr) {
+        file_storage.addNode(&found);
+        KBucket<Peer>* closest_bucket = findPeer(found.owner_id);
+        Peer* owner = closest_bucket->findNode(found.owner_id);
+        MsgType msg_type;
+        std::string message;
+        sockaddr_in addr;
+        std::tie(msg_type, message, addr) = owner->getValue(found.filename);
+        if (msg_type == Found) {
 
+        }
     }
 }
 
-void Beacon::store(std::string) {
-
+void Beacon::store(std::string filename) {
+    File file = File(filename, id);
+    KBucket<Peer>* closest_bucket = findPeer(file.id);
+    for (auto &peer : closest_bucket->preOrder()) {
+        peer->store(&file);
+    }
 }
 
 void Beacon::saveState() {
@@ -239,12 +259,13 @@ void Beacon::run() {
             std::tie(msg_type, message, addr) = response;
             
             if (msg_type == Ping) {
-                std::string peer_address = inet_ntoa(addr.sin_addr);
+                send(addr, Pong);
+                char* peer_address = inet_ntoa(addr.sin_addr);
                 std::string peer_id = sha1(peer_address);
-                ///////////
-                ///////////
-                /////////
-                send(addr, Pong, "");
+                if (routing_table.findNode(peer_id) == nullptr) {
+                    routing_table.addNode(&Peer(peer_address));
+                    joinMessage(peer_id);
+                }
             }
 
             if (msg_type == FindPeer) {
@@ -270,22 +291,66 @@ void Beacon::run() {
 
                 char* peer_address = inet_ntoa(addr.sin_addr);
                 Peer peer(peer_address);
-                Peer* found = routing_table.findNode(peer.id);
-                if (found == nullptr) {
+                if (routing_table.findNode(peer.id) == nullptr) {
                     routing_table.addNode(&peer);
+                    joinMessage(peer.id);
                 }
             }
 
             if (msg_type == FindFile) {
+                std::string file_id = message;
+                File* file = file_storage.findNode(file_id);
+                if (file == nullptr) {
+                    send(addr, NotFound);
+                } else {
+                    std::string   file_id;
+                    std::string   owner_id;
+                    std::string   filename;
+                    long long int file_size;
+                    time_t        published_on;
 
-            }
+                    std::tie(file_id, owner_id, filename, file_size, published_on) = file->asTuple();
 
-            if (msg_type == GetFile) {
-
+                    std::ostringstream msg;
+                    msg << file_id << ":" << owner_id << ":" << filename << ":" << file_size << ":" << published_on;
+                    send(addr, Found, msg.str());
+                }
             }
 
             if (msg_type == StoreFile) {
+                char* c = const_cast<char*>(message.c_str());
+                char *file_info;  
+                file_info = strtok(c, ":");
+                std::vector<std::string> file_vector;
+                while (file_info != NULL) {
+                    file_vector.push_back(file_info);
+                    file_info = strtok(NULL, ":"); 
+                }
 
+                long long int file_size;
+                std::stringstream ss;
+                ss << file_vector[3];
+                ss >> file_size;
+
+                long pub_time;
+                std::stringstream ts;
+                ts << file_vector[4];
+                ts >> pub_time;
+
+                std::string   file_id = file_vector[0];
+                std::string   owner_id = file_vector[1];
+                std::string   filename = file_vector[2];
+                
+                time_t        published_on = pub_time;
+                std::tuple<std::string, std::string, std::string, long long int, time_t> file_tuple(
+                    file_id, 
+                    owner_id, 
+                    filename, 
+                    file_size, 
+                    published_on);
+
+                File* file;
+                file->fromTuple(file_tuple);
             }
         }
     }

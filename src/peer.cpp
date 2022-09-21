@@ -5,7 +5,7 @@
 
 Peer::Peer() {}
 
-Peer::Peer(char* addr) {
+Peer::Peer(const char* addr) {
     id = sha1(addr);
     host = addr;
     port = 4444;
@@ -131,13 +131,11 @@ std::tuple<MsgType, std::string, sockaddr_in> Peer::store(File* file) {
     std::string   filename;
     long long int file_size;
     time_t        published_on;
-    std::tuple<std::string, std::string, std::string, long long int, time_t> file_tuple;
-    file_tuple = file->asTuple();
-    std::tie(file_id, owner_id, filename, file_size, published_on) = file_tuple;
+
+    std::tie(file_id, owner_id, filename, file_size, published_on) = file->asTuple();
 
     std::ostringstream msg;
     msg << file_id << ":" << owner_id << ":" << filename << ":" << file_size << ":" << published_on;
-    
     
     return sendReceive(StoreFile, msg.str());
 }

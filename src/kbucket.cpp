@@ -4,6 +4,8 @@
 #include <random>
 #include "utils.cpp"
 
+BigInt max_id("1461501637330902918203684832716283019655932542975");
+
 template<typename T>
 KBucket<T>::KBucket() {
     root = nullptr;
@@ -110,7 +112,6 @@ T* KBucket<T>::findNode(std::string node_id, T* current) {
 
 template<typename T>
 T* KBucket<T>::findClosest(std::string node_id) {
-    BigInt max_id("115792089237316195423570985008687907853269984665640564039457584007913129639935");
     return findClosest(node_id, max_id, root, root);
 }
 
@@ -136,7 +137,7 @@ std::vector<T*> KBucket<T>::findAClosest(std::string node_id) {
     for (int i = 0; i < alpha; i++) {
         if (nodes.size() > 0) {
             int closest_index = 0;
-            BigInt closest_distance("115792089237316195423570985008687907853269984665640564039457584007913129639935");
+            BigInt closest_distance = max_id;
             for (int j = 0; j < nodes.size(); j++) {
                 BigInt distance;
                 distance = bigHexor(nodes[j]->id, node_id);
