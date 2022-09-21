@@ -3,7 +3,6 @@
 #include <string>
 
 
-
 File::File() {}
 
 File::File(std::string f, std::string peer_id) {
@@ -17,7 +16,7 @@ File::File(std::string f, std::string peer_id) {
             text += line + '\n';
         }
     }
-    file_id = std::stoi(sha1(text), 0, 16);
+    id = std::stoi(sha1(text), 0, 16);
     owner_id = peer_id;
     filename = f;
     file_size = filesize(f.c_str());
@@ -26,9 +25,9 @@ File::File(std::string f, std::string peer_id) {
 }
 
 std::tuple<std::string, std::string, std::string, long long int, time_t> File::asTuple() {
-    return std::tuple<std::string, std::string, std::string, long long int, time_t>(file_id, owner_id, filename, file_size, published_on);
+    return std::tuple<std::string, std::string, std::string, long long int, time_t>(id, owner_id, filename, file_size, published_on);
 }
 
 void File::fromTuple(std::tuple<std::string, std::string, std::string, long long int, time_t> file_tuple) {
-    std::tie(file_id, owner_id, filename, file_size, published_on) = file_tuple;
+    std::tie(id, owner_id, filename, file_size, published_on) = file_tuple;
 }

@@ -2,6 +2,7 @@
 #include "kbucket.hpp"
 #include "peer.hpp"
 
+template<typename T>
 struct BucketList {
     BucketList();
 
@@ -10,33 +11,34 @@ struct BucketList {
 
     int len();
 
-    void append(KBucket*);
+    void append(KBucket<T>*);
 
-    void prepend(KBucket*);
+    void prepend(KBucket<T>*);
 
-    void addPeer(int, Peer*);
+    void addNode(int, Peer*);
+    void addNode(File*);
 
-    Peer* findPeer(std::string);
+    T* findNode(std::string);
 
-    void insert(KBucket*);
+    void insert(KBucket<T>*);
 
-    void addAfterPeer(std::string, KBucket*);
+    void addAfterNode(std::string, KBucket<T>*);
 
-    void addBeforePeer(std::string, KBucket*);
+    void addBeforeNode(std::string, KBucket<T>*);
 
-    void removeBucket(KBucket*);
+    void removeBucket(KBucket<T>*);
 
-    KBucket* findBucket(std::string);
+    KBucket<T>* findBucket(std::string);
 
-    KBucket* findClosest(std::string);
+    KBucket<T>* findClosest(std::string);
 
     void reverse();
 
     void removeDuplicates();
 
-    std::vector<KBucket*> list();
+    std::vector<KBucket<T>*> list();
 
-    std::vector<Peer*> listPeers();
+    std::vector<T*> listNodes();
 
     std::vector<std::tuple<std::string, int, time_t>> asTuples();
 

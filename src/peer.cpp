@@ -1,6 +1,7 @@
 #include "../include/peer.hpp"
 #include "network.cpp"
 #include "file.cpp"
+#include <vector>
 
 Peer::Peer() {}
 
@@ -8,7 +9,6 @@ Peer::Peer(std::string ident) {
     id = ident;
     left = nullptr;
     right = nullptr;
-    std::cout << id << std::endl;
 }
 
 std::tuple<std::string, int> Peer::address() {
@@ -19,11 +19,17 @@ std::tuple<std::string, int, time_t> Peer::asTuple() {
     return std::tuple<std::string, int, time_t>(host, port, last_seen);
 }
 
-bool Peer::send(int port, std::string header, std::string message) {
+bool Peer::send(int port, MsgType msg_type, std::string message) {
     try
     {
         WSASession Session;
         UDPSocket Socket;
+
+        std::string header = std::to_string(msg_type);
+
+        header += ":" + message.size();
+        message = base64_encode(message);
+        header = base64_encode(header);
         Socket.SendTo(host, port, header.c_str(), header.size());
         Socket.SendTo(host, port, message.c_str(), message.size());
         return true;
@@ -37,89 +43,85 @@ bool Peer::send(int port, std::string header, std::string message) {
     return true;
 }
 
-std::tuple<std::string, std::string> Peer::receive() {
+std::tuple<MsgType, std::string, sockaddr_in> Peer::receive() {
     try
     {
         WSASession Session;
         UDPSocket Socket;
-        char header[100];
-        Socket.RecvFrom(header, 100);
+        char buffer[100];
+        sockaddr_in addr = Socket.RecvFrom(buffer, sizeof(buffer));
+        std::string buf(base64_decode(buffer));
+        std::vector<std::string> response;
+        
+        char* c = const_cast<char*>(buf.c_str());
+        char *ptr;  
+        ptr = strtok(c, ":");
+        while (ptr != NULL)  
+        {  
+            response.push_back(ptr);
+            ptr = strtok (NULL, ":");  
+        }  
 
-        char message[100];
-        Socket.RecvFrom(message, 100);
+        std::string header(response[0]);
+        std::string msg_len(response[1]);
 
-        return std::tuple<std::string, std::string>(header, message);
+        int type_int;
+        std::stringstream ms;
+        ms << header;
+        ms >> type_int;
+
+        MsgType msg_type = static_cast<MsgType>(type_int);
+
+        int length;
+        std::stringstream ss; 
+        ss << msg_len;
+        ss >> length;
+
+        char msg_buffer[length];
+        Socket.RecvFrom(msg_buffer, sizeof(msg_buffer));
+
+        std::string message(msg_buffer);
+
+        message = base64_decode(message);
+
+        return std::tuple<MsgType, std::string, sockaddr_in>(msg_type, message, addr);
     }
     catch (std::exception &ex)
     {
         std::cout << ex.what();
-        return std::tuple<std::string, std::string>("", "");
+        return std::tuple<MsgType, std::string, sockaddr_in>(NotFound, "", {0});
     }
     
-    return std::tuple<std::string, std::string>("", "");
+    return std::tuple<MsgType, std::string, sockaddr_in>(NotFound, "", {0});
 }
 
-std::tuple<std::string, std::string> Peer::sendReceive(int port, std::string header, std::string message) {
-    try
-    {
-        WSASession Session;
-        UDPSocket Socket;
-        Socket.SendTo(host, port, header.c_str(), header.size());
-        Socket.SendTo(host, port, message.c_str(), message.size());
-
-        char receive_header[100];
-        Socket.RecvFrom(receive_header, 100);
-
-        char receive_message[100];
-        Socket.RecvFrom(receive_message, 100);
-
-        return std::tuple<std::string, std::string>(receive_header, receive_message);
-    }
-    catch (std::exception &ex)
-    {
-        std::cout << ex.what();
-        return std::tuple<std::string, std::string>("", "");
-    }
-    
-    return std::tuple<std::string, std::string>("", "");
+std::tuple<MsgType, std::string, sockaddr_in> Peer::sendReceive(int port, MsgType msg_type, std::string message) {
+    send(port, msg_type, message);    
+    return receive();
 }
 
 bool Peer::ping(int port) {
-    
-    try
-    {
-        WSASession Session;
-        UDPSocket Socket;
-        std::string send_header = "ping";
-        std::string send_message = "";
-        Socket.SendTo(host, port, send_header.c_str(), send_header.size());
-        Socket.SendTo(host, port, send_message.c_str(), send_message.size());
-
-        char receive_header[100];
-        Socket.RecvFrom(receive_header, 100);
-
-        char receive_message[100];
-        Socket.RecvFrom(receive_message, 100);
-        if (receive_header == "pong") {
-            return true;
-        } else {
-            return false;
-        }
-        
-    }
-    catch (std::exception &ex)
-    {
+    bool success = send(port, Ping, "");
+    if (!success)
         return false;
-    }
-    
-   return true;
+
+    std::tuple<MsgType, std::string, sockaddr_in> response = receive();
+    MsgType msg_type;
+    std::string message;
+    sockaddr_in addr;
+    std::tie(msg_type, message, addr) = response;
+
+    if (msg_type == Pong)
+        return true;
+    else
+        return false;
 }
 
-std::tuple<std::string, std::string> Peer::findNode(std::string target, int port) {
-    return sendReceive(port, "find_node", target);
+std::tuple<MsgType, std::string, sockaddr_in> Peer::findNode(std::string target, int port) {
+    return sendReceive(port, FindPeer, target);
 }
 
-std::tuple<std::string, std::string> Peer::store(File* file, int port) {
+std::tuple<MsgType, std::string, sockaddr_in> Peer::store(File* file, int port) {
     
     std::string   file_id;
     std::string   owner_id;
@@ -134,15 +136,15 @@ std::tuple<std::string, std::string> Peer::store(File* file, int port) {
     msg << file_id << ":" << owner_id << ":" << filename << ":" << file_size << ":" << published_on;
     
     
-    return sendReceive(port, "store", ""/*msg.str()*/);
+    return sendReceive(port, StoreFile, msg.str());
 }
 
-std::tuple<std::string, std::string> Peer::findValue(std::string target, int port) {
-    return sendReceive(port, "find_value", target);
+std::tuple<MsgType, std::string, sockaddr_in> Peer::findValue(std::string target, int port) {
+    return sendReceive(port, FindFile, target);
 }
 
-std::tuple<std::string, std::string> Peer::getValue(std::string target, int port) {
-    return sendReceive(port, "get_value", target);
+std::tuple<MsgType, std::string, sockaddr_in> Peer::getValue(std::string target, int port) {
+    return sendReceive(port, GetFile, target);
 }
 
 bool Peer::isOlderThan(int n_seconds) {

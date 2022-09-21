@@ -57,3 +57,14 @@ void UDPSocket::Bind(unsigned short port) {
     if (ret < 0)
         throw std::system_error(WSAGetLastError(), std::system_category(), "Bind failed");
 }
+
+void UDPSocket::Bind(const std::string& address, unsigned short port) {
+    sockaddr_in add;
+    add.sin_family = AF_INET;
+    add.sin_addr.s_addr = inet_addr(address.c_str());
+    add.sin_port = htons(port);
+
+    int ret = bind(sock, reinterpret_cast<SOCKADDR *>(&add), sizeof(add));
+    if (ret < 0)
+        throw std::system_error(WSAGetLastError(), std::system_category(), "Bind failed");
+}

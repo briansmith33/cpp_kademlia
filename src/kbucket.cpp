@@ -4,7 +4,8 @@
 #include <random>
 #include "utils.cpp"
 
-KBucket::KBucket() {
+template<typename T>
+KBucket<T>::KBucket() {
     root = nullptr;
     next = nullptr;
     prev = nullptr;
@@ -12,52 +13,56 @@ KBucket::KBucket() {
     alpha = 3;
 }
 
-void KBucket::addPeer(Peer* new_peer) {
+template<typename T>
+void KBucket<T>::addNode(T* new_node) {
     if (root == nullptr) {
-        root = new_peer;
+        root = new_node;
         return;
     }
-    addPeer(new_peer, root);
+    addNode(new_node, root);
 }
 
-void KBucket::addPeer(Peer* new_peer, Peer* current) {
+template<typename T>
+void KBucket<T>::addNode(T* new_node, T* current) {
     
     BigInt new_id;
     BigInt current_id;
-    new_id = hexToInt(new_peer->id);
+    new_id = hexToInt(new_node->id);
     current_id = hexToInt(current->id);
     
     if (new_id < current_id) {
         if (current->left == nullptr) {
-            current->left = new_peer;
+            current->left = new_node;
         } else {
-            addPeer(new_peer, current->left);
+            addNode(new_node, current->left);
         }
     }
 
     if (new_id > current_id) {
         if (current->right == nullptr) {
-            current->right = new_peer;
+            current->right = new_node;
         } else {
-            addPeer(new_peer, current->right);
+            addNode(new_node, current->right);
         }
     }
 }
 
-void KBucket::removePeer(Peer* peer) {
-    removePeer(peer, root);
+template<typename T>
+void KBucket<T>::removeNode(T* node) {
+    removeNode(node, root);
 }
 
-Peer* KBucket::removePeer(Peer* peer, Peer* current) {
-    BigInt peer_id;
+template<typename T>
+T* KBucket<T>::removeNode(T* node, T* current) {
+    BigInt node_id;
     BigInt current_id;
-    peer_id = hexToInt(peer->id);
+    node_id = hexToInt(node->id);
     current_id = hexToInt(current->id);
-    if (peer_id < current_id) {
-        current->left = removePeer(peer, current->left);
+    if (node_id < current_id) {
+        current->left = removeNode(node, current->left);
     } else
-    if (peer_id > current_id) {
-        current->right = removePeer(peer, current->right);
+    if (node_id > current_id) {
+        current->right = removeNode(node, current->right);
     } else {
         if (current->left == nullptr) {
             return current->right;
@@ -65,35 +70,37 @@ Peer* KBucket::removePeer(Peer* peer, Peer* current) {
         if (current->right == nullptr) {
             return current->left;
         } else {
-            Peer* temp = min(current->right);
+            T* temp = min(current->right);
             current->id = temp->id;
-            current->right = removePeer(temp, current->right);
+            current->right = removeNode(temp, current->right);
         }
     }
     return current;
 }
 
-Peer* KBucket::findPeer(std::string peer_id) {
-    return findPeer(peer_id, root);
+template<typename T>
+T* KBucket<T>::findNode(std::string node_id) {
+    return findNode(node_id, root);
 }
 
-Peer* KBucket::findPeer(std::string peer_id, Peer* current) {
+template<typename T>
+T* KBucket<T>::findNode(std::string node_id, T* current) {
     if (current == nullptr) {
         return nullptr;
     }
     BigInt target_id;
     BigInt current_id;
-    target_id = hexToInt(peer_id);
+    target_id = hexToInt(node_id);
     current_id = hexToInt(current->id);
     if (target_id < current_id) {
         if (current->left != nullptr) {
-            return findPeer(peer_id, current->left);
+            return findNode(node_id, current->left);
         }
         return nullptr;
     } else
     if (target_id > current_id) {
         if (current->right != nullptr) {
-            return findPeer(peer_id, current->right);
+            return findNode(node_id, current->right);
         }
         return nullptr;
     } else {
@@ -101,74 +108,83 @@ Peer* KBucket::findPeer(std::string peer_id, Peer* current) {
     }
 }
 
-Peer* KBucket::findClosest(std::string peer_id) {
+template<typename T>
+T* KBucket<T>::findClosest(std::string node_id) {
     BigInt max_id("115792089237316195423570985008687907853269984665640564039457584007913129639935");
-    return findClosest(peer_id, max_id, root, root);
+    return findClosest(node_id, max_id, root, root);
 }
 
-Peer* KBucket::findClosest(std::string peer_id, BigInt distance, Peer* closest, Peer* current) {
-    if (distance > bigHexor(current->id, peer_id)) {
-        distance = bigHexor(current->id, peer_id);
+template<typename T>
+T* KBucket<T>::findClosest(std::string node_id, BigInt distance, T* closest, T* current) {
+    if (distance > bigHexor(current->id, node_id)) {
+        distance = bigHexor(current->id, node_id);
         closest = current;
     }
     if (current->left != nullptr) {
-        return findClosest(peer_id, distance, closest, current->left);
+        return findClosest(node_id, distance, closest, current->left);
     }
     if (current->right != nullptr) {
-        return findClosest(peer_id, distance, closest, current->right);
+        return findClosestPeer(node_id, distance, closest, current->right);
     }
     return closest;
 }
 
-std::vector<Peer*> KBucket::findAClosest(std::string peer_id) {
-    std::vector<Peer*> peers = inOrder();
-    std::vector<Peer*> a_closest;
+template<typename T>
+std::vector<T*> KBucket<T>::findAClosest(std::string node_id) {
+    std::vector<T*> nodes = inOrder();
+    std::vector<T*> a_closest;
     for (int i = 0; i < alpha; i++) {
-        if (peers.size() > 0) {
+        if (nodes.size() > 0) {
             int closest_index = 0;
             BigInt closest_distance("115792089237316195423570985008687907853269984665640564039457584007913129639935");
-            for (int j = 0; j < peers.size(); j++) {
+            for (int j = 0; j < nodes.size(); j++) {
                 BigInt distance;
-                distance = bigHexor(peers[j]->id, peer_id);
+                distance = bigHexor(nodes[j]->id, node_id);
                 if (distance < closest_distance) {
                     closest_index = j;
                     closest_distance = distance;
                 }
             }
-            a_closest.push_back(peers[closest_index]);
-            peers.erase(peers.begin() + closest_index);
+            a_closest.push_back(nodes[closest_index]);
+            nodes.erase(nodes.begin() + closest_index);
         }
     }
     return a_closest;
 }
 
-Peer* KBucket::min() {
+template<typename T>
+T* KBucket<T>::min() {
     return min(root);
 }
 
-Peer* KBucket::min(Peer* current) {
+template<typename T>
+T* KBucket<T>::min(T* current) {
     if (current->left != nullptr) {
         return min(current->left);
     }
     return current;
 }
 
-Peer* KBucket::max() {
+template<typename T>
+T* KBucket<T>::max() {
     return max(root);
 }
 
-Peer* KBucket::max(Peer* current) {
+template<typename T>
+T* KBucket<T>::max(T* current) {
     if (current->right != nullptr) {
-        return max(current->right);
+        return maxPeer(current->right);
     }
     return current;
 }
 
-int KBucket::height() {
+template<typename T>
+int KBucket<T>::height() {
     return height(root);
 }
 
-int KBucket::height(Peer* current) {
+template<typename T>
+int KBucket<T>::height(T* current) {
     if (&current == nullptr) {
         return -1;
     }
@@ -177,16 +193,17 @@ int KBucket::height(Peer* current) {
     return 1 + std::max(left_height, right_height);
 }
 
-int KBucket::size() {
+template<typename T>
+int KBucket<T>::size() {
     if (root == nullptr) {
         return 0;
     }
     
-    Stack stack = Stack();
+    Stack<T> stack = Stack<T>();
     stack.push(root);
     int size = 1;
     while (!stack.isEmpty()) {
-        Peer* current = stack.pop();
+        T* current = stack.pop();
         if (current->left != nullptr) {
             size++;
             stack.push(current->left);
@@ -199,126 +216,135 @@ int KBucket::size() {
     return size;
 }
 
-std::tuple<KBucket, KBucket> KBucket::split() {
+template<typename T>
+std::tuple<KBucket<T>, KBucket<T>> KBucket<T>::split() {
     if (root == nullptr) {
         return std::tuple<KBucket, KBucket>(KBucket(), KBucket());
     }
 
-    std::vector<Peer*> peers = inOrder();
-    std::vector<Peer*> k1_peers;
-    std::vector<Peer*> k2_peers;
+    std::vector<T*> nodes = inOrder();
+    std::vector<T*> k1_nodes;
+    std::vector<T*> k2_nodes;
 
-    for (int i = 0; i < peers.size(); i++) {
-        if (i < peers.size() / 2) {
-            k1_peers.push_back(peers[i]);
+    for (int i = 0; i < nodes.size(); i++) {
+        if (i < nodes.size() / 2) {
+            k1_nodes.push_back(nodes[i]);
         } else {
-            k2_peers.push_back(peers[i]);
+            k2_nodes.push_back(nodes[i]);
         }
     }
 
-    Peer* k1_head = k1_peers[std::round(k1_peers.size()/2)];
-    Peer* k2_head = k2_peers[std::round(k2_peers.size()/2)];
+    T* k1_head = k1_nodes[std::round(k1_nodes.size()/2)];
+    T* k2_head = k2_nodes[std::round(k2_nodes.size()/2)];
 
-    k1_peers.erase(k1_peers.begin() + std::round(k1_peers.size()/2));
-    k2_peers.erase(k2_peers.begin() + std::round(k2_peers.size()/2));
+    k1_nodes.erase(k1_nodes.begin() + std::round(k1_nodes.size()/2));
+    k2_nodes.erase(k2_nodes.begin() + std::round(k2_nodes.size()/2));
 
     std::random_device rd;
     std::default_random_engine rng(rd());
-    std::shuffle(k1_peers.begin(), k1_peers.end(), rng);
-    std::shuffle(k2_peers.begin(), k2_peers.end(), rng);
+    std::shuffle(k1_nodes.begin(), k1_nodes.end(), rng);
+    std::shuffle(k2_nodes.begin(), k2_nodes.end(), rng);
 
-    k1_peers.insert(k1_peers.begin(), k1_head);
-    k2_peers.insert(k2_peers.begin(), k2_head);
+    k1_nodes.insert(k1_nodes.begin(), k1_head);
+    k2_nodes.insert(k2_nodes.begin(), k2_head);
 
     KBucket k1 = KBucket();
     KBucket k2 = KBucket();
 
-    for (auto &peer : k1_peers) {
-        k1.addPeer(peer);
+    for (auto &node : k1_nodes) {
+        k1.addNode(node);
     }
 
-    for (auto &peer : k2_peers) {
-        k2.addPeer(peer);
+    for (auto &node : k2_nodes) {
+        k2.addNode(node);
     }
     return std::tuple<KBucket, KBucket>(k1, k2);
 }
 
-std::vector<Peer*> KBucket::preOrder() {
-    std::vector<Peer*> peer_list;
-    return preOrder(peer_list, root);
+template<typename T>
+std::vector<T*> KBucket<T>::preOrder() {
+    std::vector<T*> node_list;
+    return preOrder(node_list, root);
 }
 
-std::vector<Peer*> KBucket::preOrder(std::vector<Peer*> peer_list, Peer* current) {
+template<typename T>
+std::vector<T*> KBucket<T>::preOrder(std::vector<T*> node_list, T* current) {
     if (current == nullptr) {
         return {nullptr};
     }
-    peer_list.push_back(current);
+    node_list.push_back(current);
     if (current->left != nullptr) {
-       preOrder(peer_list, current->left);
+       preOrder(node_list, current->left);
     }
     if (current->right != nullptr) {
-        preOrder(peer_list, current->right);
+        preOrder(node_list, current->right);
     }
-    return peer_list;
+    return node_list;
 }
 
-std::vector<Peer*> KBucket::inOrder() {
-    std::vector<Peer*> peer_list;
-    return inOrder(peer_list, root);
+template<typename T>
+std::vector<T*> KBucket<T>::inOrder() {
+    std::vector<T*> node_list;
+    return inOrder(node_list, root);
 }
 
-std::vector<Peer*> KBucket::inOrder(std::vector<Peer*> peer_list, Peer* current) {
+template<typename T>
+std::vector<T*> KBucket<T>::inOrder(std::vector<T*> node_list, T* current) {
     if (current == nullptr) {
         return {nullptr};
     }
     if (current->left != nullptr) {
-       inOrder(peer_list, current->left);
+       inOrder(node_list, current->left);
     }
-    peer_list.push_back(current);
+    node_list.push_back(current);
     if (current->right != nullptr) {
-        inOrder(peer_list, current->right);
+        inOrder(node_list, current->right);
     }
-    return peer_list;
+    return node_list;
 }
 
-std::vector<Peer*> KBucket::postOrder() {
-    std::vector<Peer*> peer_list;
-    return postOrder(peer_list, root);
+template<typename T>
+std::vector<T*> KBucket<T>::postOrder() {
+    std::vector<T*> node_list;
+    return postOrder(node_list, root);
 }
 
-std::vector<Peer*> KBucket::postOrder(std::vector<Peer*> peer_list, Peer* current) {
+template<typename T>
+std::vector<T*> KBucket<T>::postOrder(std::vector<T*> node_list, T* current) {
     if (current == nullptr) {
         return {nullptr};
     }
     if (current->left != nullptr) {
-       postOrder(peer_list, current->left);
+       postOrder(node_list, current->left);
     }
     
     if (current->right != nullptr) {
-        postOrder(peer_list, current->right);
+        postOrder(node_list, current->right);
     }
-    peer_list.push_back(current);
+    node_list.push_back(current);
 
-    return peer_list;
+    return node_list;
 }
 
-std::vector<Peer*> KBucket::timeSort() {
-    std::vector<Peer*> peers = inOrder();
+template<typename T>
+std::vector<T*> KBucket<T>::timeSort() {
+    std::vector<T*> nodes = inOrder();
     int n = size();
     for (int i = std::round(n / 2); i >= 0; i--) {
-        peers = timeHeap(peers, n, i);
+        nodes = timeHeap(nodes, n, i);
     }
 
     for (int i = n - 1; i > 0; i--) {
-        Peer* temp = peers[i];
-        peers[i] = peers[0];
-        peers[0] = temp;
-        peers = timeHeap(peers, i, 0);
+        T* temp = nodes[i];
+        nodes[i] = nodes[0];
+        nodes[0] = temp;
+        nodes = timeHeap(nodes, i, 0);
     }
-    return peers;
+    return nodes;
 }
 
-std::vector<Peer*> KBucket::timeHeap(std::vector<Peer*> heap, int n, int i) {
+template<typename T>
+std::vector<T*> KBucket<T>::timeHeap(std::vector<T*> heap, int n, int i) {
     int largest = i;
     int left = 2 * i + 1;
     int right = 2 * i + 2;
@@ -340,14 +366,16 @@ std::vector<Peer*> KBucket::timeHeap(std::vector<Peer*> heap, int n, int i) {
     return {nullptr};
 }
 
-Peer* KBucket::oldest() {
+template<typename T>
+T* KBucket<T>::oldest() {
     return timeSort()[0];
 }
 
-std::vector<std::tuple<std::string, int, time_t>> KBucket::asTuples() {
-    std::vector<std::tuple<std::string, int, time_t>> peer_tuples;
-    for (auto &peer : preOrder()) {
-        peer_tuples.push_back(peer->asTuple());
+template<typename T>
+std::vector<std::tuple<std::string, int, time_t>> KBucket<T>::asTuples() {
+    std::vector<std::tuple<std::string, int, time_t>> node_tuples;
+    for (auto &node : preOrder()) {
+        node_tuples.push_back(node->asTuple());
     }
-    return peer_tuples;
+    return node_tuples;
 }

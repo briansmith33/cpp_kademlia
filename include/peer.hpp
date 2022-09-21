@@ -2,14 +2,21 @@
 #include <sstream>
 #include <iostream>
 #include "file.hpp"
+#include "network.hpp"
+#include "utils.hpp"
+
+enum MsgType {
+    Ping = 0, Pong, FindPeer, FindFile, GetFile, StoreFile, Found, NotFound
+};
 
 struct Peer {
     Peer();
     Peer(std::string id);
 
-    std::string   id;
-    Peer*         left;
-    Peer*         right;
+    std::string id;
+    Peer* left;
+    Peer* right;
+
     std::string   host;
     int           port;
     time_t        last_seen;
@@ -19,21 +26,21 @@ struct Peer {
 
     std::tuple<std::string, int> address();
 
-    bool send(int, std::string, std::string);
+    bool send(int, MsgType, std::string);
 
-    std::tuple<std::string, std::string> receive();
+    std::tuple<MsgType, std::string, sockaddr_in> receive();
 
-    std::tuple<std::string, std::string> sendReceive(int, std::string, std::string);
+    std::tuple<MsgType, std::string, sockaddr_in> sendReceive(int, MsgType, std::string);
 
     bool ping(int);
 
-    std::tuple<std::string, std::string> findNode(std::string, int);
+    std::tuple<MsgType, std::string, sockaddr_in> findNode(std::string, int);
 
-    std::tuple<std::string, std::string> store(File*, int);
+    std::tuple<MsgType, std::string, sockaddr_in> store(File*, int);
 
-    std::tuple<std::string, std::string> findValue(std::string, int);
+    std::tuple<MsgType, std::string, sockaddr_in> findValue(std::string, int);
 
-    std::tuple<std::string, std::string> getValue(std::string, int);
+    std::tuple<MsgType, std::string, sockaddr_in> getValue(std::string, int);
 
     bool isOlderThan(int);
 

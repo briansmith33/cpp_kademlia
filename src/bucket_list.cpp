@@ -1,9 +1,10 @@
 #include "../include/bucket_list.hpp"
-#include "utils.cpp"
 
-BucketList::BucketList() {}
+template<typename T>
+BucketList<T>::BucketList() {}
 
-int BucketList::len() {
+template<typename T>
+int BucketList<T>::len() {
     int length = 0;
     KBucket* current = head;
     do {
@@ -13,7 +14,8 @@ int BucketList::len() {
     return length;
 }
 
-void BucketList::append(KBucket* bucket) {
+template<typename T>
+void BucketList<T>::append(KBucket<T>* bucket) {
     if (head == nullptr) {
         head = bucket;
         head->next = head;
@@ -27,7 +29,8 @@ void BucketList::append(KBucket* bucket) {
     }
 }
 
-void BucketList::prepend(KBucket* bucket) {
+template<typename T>
+void BucketList<T>::prepend(KBucket<T>* bucket) {
     if (head == nullptr) {
         head = bucket;
         head->next = head;
@@ -42,58 +45,97 @@ void BucketList::prepend(KBucket* bucket) {
     }
 }
 
-void BucketList::addPeer(int port, Peer* peer) {
+template<typename T>
+void BucketList<T>::addNode(int port, Peer* peer) {
     KBucket* bucket = findClosest(peer->id);
     if (bucket == nullptr) {
         *bucket = KBucket();
-        bucket->addPeer(peer);
+        bucket->addNode(peer);
         insert(bucket);
     } else
-    if (bucket->size() < bucket->k_nodes) {
-        bucket->addPeer(peer);
+    if (bucket->size<Peer>() < bucket->k_nodes) {
+        bucket->addNode(peer);
     } else {
-        Peer* oldest_peer = bucket->oldest();
+        Peer* oldest_peer = bucket->oldest<Peer>();
         if (oldest_peer->isOlderThan(3600)) {
             bool is_up = oldest_peer->ping(port);
             if (!is_up) {
-                bucket->removePeer(oldest_peer);
-                bucket->addPeer(peer);
+                bucket->removeNode(oldest_peer);
+                bucket->addNode(peer);
                 return;
             }
         }
         KBucket k1;
         KBucket k2;
-        std::tie(k1, k2) = bucket->split();
+        std::tie(k1, k2) = bucket->split<Peer>();
 
         removeBucket(bucket);
         BigInt left_distance = bigHexor(k1.root->id, peer->id);
         BigInt right_distance = bigHexor(k2.root->id, peer->id);
         if (left_distance < right_distance) {
-            k1.addPeer(peer);
+            k1.addNode(peer);
         } else {
-            k2.addPeer(peer);
+            k2.addNode(peer);
         }
         insert(&k1);
         insert(&k2);
     }
 }
 
-Peer* BucketList::findPeer(std::string peer_id) {
-    KBucket* bucket = findClosest(peer_id);
+template<typename T>
+void BucketList<T>::addNode(File* file) {
+    KBucket* bucket = findClosest(file->id);
     if (bucket == nullptr) {
-        Peer* peer = bucket->findPeer(peer_id);
+        *bucket = KBucket();
+        bucket->addNode<File>(file);
+        insert(bucket);
+    } else
+    if (bucket->size<Peer>() < bucket->k_nodes) {
+        bucket->addNode(file);
+    } else {
+        /*
+        File* oldest_file = bucket->oldest<File>();
+        if (oldest_file->isOlderThan(3600)) {
+            bucket->removeNode(oldest_peer);
+            bucket->addNode(peer);
+            return;
+        }
+        */
+        KBucket k1;
+        KBucket k2;
+        std::tie(k1, k2) = bucket->split<File>();
+
+        removeBucket(bucket);
+        BigInt left_distance = bigHexor(k1.root->id, file->id);
+        BigInt right_distance = bigHexor(k2.root->id, file->id);
+        if (left_distance < right_distance) {
+            k1.addNode(file);
+        } else {
+            k2.addNode(file);
+        }
+        insert(&k1);
+        insert(&k2);
+    }
+}
+
+template<typename T>
+T* BucketList<T>::findNode(std::string node_id) {
+    KBucket* bucket = findClosest(node_id);
+    if (bucket == nullptr) {
+        T* peer = bucket->findNode<T>(node_id);
         if (peer == nullptr) {
-            peer = bucket->prev->findPeer(peer_id);
+            peer = bucket->prev->findNode<T>(node_id);
         }
         if (peer == nullptr) {
-            peer = bucket->next->findPeer(peer_id);
+            peer = bucket->next->findNode<T>(node_id);
         }
         return peer;
     }
     return nullptr;
 }
 
-void BucketList::insert(KBucket* bucket) {
+template<typename T>
+void BucketList<T>::insert(KBucket<T>* bucket) {
     std::vector<KBucket*> buckets = list();
     if (buckets.size() == 0) {
         append(bucket);
@@ -117,20 +159,20 @@ void BucketList::insert(KBucket* bucket) {
         BigInt current_id = hexToInt(buckets[i]->root->id);
         BigInt next_id = hexToInt(buckets[i+1]->root->id);
         if (current_id < root_id < next_id) {
-            addAfterPeer(buckets[i]->root->id, bucket);
+            addAfterNode(buckets[i]->root->id, bucket);
             return;
         }
     }
 }
-
-void BucketList::addAfterPeer(std::string peer_id, KBucket* bucket) {
+template<typename T>
+void BucketList<T>::addAfterNode(std::string node_id, KBucket<T>* bucket) {
     KBucket* current = head;
     while (current != nullptr) {
-        if (current->next == head && current->root->id == peer_id) {
+        if (current->next == head && current->root->id == node_id) {
             append(bucket);
             return;
         } else
-        if (current->root->id == peer_id) {
+        if (current->root->id == node_id) {
             KBucket* next = current->next;
             current->next = bucket;
             bucket->next = next;
@@ -142,14 +184,15 @@ void BucketList::addAfterPeer(std::string peer_id, KBucket* bucket) {
     }
 }
 
-void BucketList::addBeforePeer(std::string peer_id, KBucket* bucket) {
+template<typename T>
+void BucketList<T>::addBeforeNode(std::string node_id, KBucket<T>* bucket) {
     KBucket* current = head;
     while (current != nullptr) {
-        if (current->prev == head && current->root->id == peer_id) {
+        if (current->prev == head && current->root->id == node_id) {
             prepend(bucket);
             return;
         } else
-        if (current->root->id == peer_id) {
+        if (current->root->id == node_id) {
             KBucket* prev = current->prev;
             prev->next = bucket;
             current->prev = bucket;
@@ -161,7 +204,8 @@ void BucketList::addBeforePeer(std::string peer_id, KBucket* bucket) {
     } 
 }
 
-void BucketList::removeBucket(KBucket* bucket) {
+template<typename T>
+void BucketList<T>::removeBucket(KBucket<T>* bucket) {
     KBucket* current = head;
     do {
         if (current == bucket && current == head) {
@@ -188,7 +232,8 @@ void BucketList::removeBucket(KBucket* bucket) {
     } while (current != head);
 }
 
-KBucket* BucketList::findBucket(std::string bucket_id) {
+template<typename T>
+KBucket<T>* BucketList<T>::findBucket(std::string bucket_id) {
     KBucket* current = head;
     if (current->root->id == bucket_id) {
         return current;
@@ -213,7 +258,8 @@ KBucket* BucketList::findBucket(std::string bucket_id) {
     return nullptr;
 }
 
-KBucket* BucketList::findClosest(std::string bucket_id) {
+template<typename T>
+KBucket<T>* BucketList<T>::findClosest(std::string bucket_id) {
     KBucket* current = head;
     do {
         BigInt left_distance = bigHexor(current->prev->root->id, bucket_id);
@@ -234,7 +280,8 @@ KBucket* BucketList::findClosest(std::string bucket_id) {
     } while (current != head);
 }
 
-void BucketList::reverse() {
+template<typename T>
+void BucketList<T>::reverse() {
     KBucket* temp;
     KBucket* current = head;
     do {
@@ -248,7 +295,8 @@ void BucketList::reverse() {
     }
 }
 
-void BucketList::removeDuplicates() {
+template<typename T>
+void BucketList<T>::removeDuplicates() {
     KBucket* current = head;
     std::vector<std::string> seen;
     do {
@@ -267,7 +315,8 @@ void BucketList::removeDuplicates() {
     } while (current != head);
 }
 
-std::vector<KBucket*> BucketList::list() {
+template<typename T>
+std::vector<KBucket<T>*> BucketList<T>::list() {
     std::vector<KBucket*> buckets;
     KBucket* current = head;
     do {
@@ -277,23 +326,25 @@ std::vector<KBucket*> BucketList::list() {
     return buckets;
 }
 
-std::vector<Peer*> BucketList::listPeers() {
-    std::vector<Peer*> peers;
+template<typename T>
+std::vector<T*> BucketList<T>::listNodes() {
+    std::vector<T*> nodes;
     KBucket* current = head;
     do {
-        for (auto &peer : current->inOrder()) {
-            peers.push_back(peer);
+        for (auto &node : current->inOrder<T>()) {
+            nodes.push_back(node);
         }
         current = current->next;
     } while (current != head);
-    return peers;
+    return nodes;
 }
 
-std::vector<std::tuple<std::string, int, time_t>> BucketList::asTuples() {
+template<typename T>
+std::vector<std::tuple<std::string, int, time_t>> BucketList<T>::asTuples() {
     std::vector<std::tuple<std::string, int, time_t>> tuples;
     KBucket* current = head;
     do {
-        for (auto &peer : current->preOrder()) {
+        for (auto &peer : current->preOrder<Peer>()) {
             tuples.push_back(peer->asTuple());
         }
         current = current->next;
@@ -301,7 +352,8 @@ std::vector<std::tuple<std::string, int, time_t>> BucketList::asTuples() {
     return tuples;
 }
 
-void BucketList::printList() {
+template<typename T>
+void BucketList<T>::printList() {
     KBucket* current = head;
     do {
         std::cout << current->root->id << std::endl;

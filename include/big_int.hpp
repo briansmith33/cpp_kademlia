@@ -2,15 +2,14 @@
 // the above approach
 #include <bits/stdc++.h>
 #pragma once
-using namespace std;
 
 class BigInt{
-	string digits;
+	std::string digits;
 public:
 
 	//Constructors:
 	BigInt(unsigned long long n = 0);
-	BigInt(string &);
+	BigInt(std::string &);
 	BigInt(const char *);
 	BigInt(BigInt &);
 
@@ -64,8 +63,8 @@ public:
 	friend BigInt sqrt(BigInt& a);
 
 	//Read and Write
-	friend ostream &operator<<(ostream&, const BigInt&);
-	friend istream &operator>>(istream&, BigInt&);
+	friend std::ostream &operator<<(std::ostream&, const BigInt&);
+	friend std::istream &operator>>(std::istream&, BigInt&);
 
 	//Others
 	friend BigInt NthCatalan(int n);

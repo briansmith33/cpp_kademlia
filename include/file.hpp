@@ -2,12 +2,16 @@
 #include <tuple>
 #include <sstream>
 #include <ctime>
+#include "node.hpp"
 
 struct File {
     File();
     File(std::string filename, std::string peer_id);
 
-    std::string   file_id;
+    std::string id;
+    File* left;
+    File* right;
+
     std::string   owner_id;
     std::string   filename;
     long long int file_size;

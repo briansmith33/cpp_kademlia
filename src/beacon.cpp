@@ -1,2 +1,297 @@
 #include "../include/beacon.hpp"
+#include "network.cpp"
 
+WSASession Session;
+UDPSocket Socket;
+
+Beacon::Beacon() {}
+
+Beacon::Beacon(int prt, int bprt = 0) {
+    port = prt;
+    boot_port = bprt;
+}
+
+void Beacon::send(sockaddr_in addr, MsgType msg_type, std::string message) {
+    std::string header = std::to_string(msg_type);
+    header += ":" + message.size();
+    message = base64_encode(message);
+    header = base64_encode(message);
+    Socket.SendTo(addr, header.c_str(), header.size());
+    Socket.SendTo(addr, message.c_str(), message.size());
+}
+
+std::tuple<MsgType, std::string, sockaddr_in> Beacon::receive() {
+    char buffer[100];
+    sockaddr_in addr = Socket.RecvFrom(buffer, sizeof(buffer));
+    std::string buf(base64_decode(buffer));
+    std::vector<std::string> response;
+    
+    char* c = const_cast<char*>(buf.c_str());
+    char *ptr;  
+    ptr = strtok(c, ":");
+    while (ptr != NULL)  
+    {  
+        response.push_back(ptr);
+        ptr = strtok (NULL, ":");  
+    }  
+
+    std::string header(response[0]);
+    std::string msg_len(response[1]);
+
+    int type_int;
+    std::stringstream ms;
+    ms << header;
+    ms >> type_int;
+
+    MsgType msg_type = static_cast<MsgType>(type_int);
+
+    int length;
+    std::stringstream ss; 
+    ss << msg_len;
+    ss >> length;
+
+    char msg_buffer[length];
+    sockaddr_in addr = Socket.RecvFrom(msg_buffer, sizeof(msg_buffer));
+
+    std::string message(msg_buffer);
+
+    message = base64_decode(message);
+
+    return std::tuple(msg_type, message, addr);
+}
+
+KBucket<Peer>* Beacon::bootstrap() {
+    std::string boot_id(sha1(boot_addr+std::to_string(boot_port)));
+    return findPeer(id, &Peer(boot_id), nullptr);
+}
+
+KBucket<Peer>* Beacon::findPeer(std::string peer_id, Peer* boot_peer, KBucket<Peer>* nearest_bucket) {
+    if (boot_peer == nullptr) {
+        KBucket<Peer>* closest_bucket = routing_table.findClosest(peer_id);
+        boot_peer = closest_bucket->findClosest(peer_id);
+    }
+
+    if (nearest_bucket == nullptr) {
+        std::tuple<MsgType, std::string, sockaddr_in> response = boot_peer->findNode(peer_id, port);
+        MsgType msg_type;
+        std::string message;
+        sockaddr_in addr;
+        std::tie(msg_type, message, addr) = response;
+        if (msg_type == NotFound) {
+            return nullptr;
+        }
+        if (msg_type == Found) {
+            KBucket<Peer> bucket;
+            char* c = const_cast<char*>(message.c_str());
+            char *peer_tuple;  
+            peer_tuple = strtok(c, ":");
+            while (peer_tuple != NULL)  
+            {  
+                char *peer_info;  
+                peer_info = strtok(peer_info, ",");
+                std::vector<std::string> peer_vector;
+                while (peer_info != NULL) {
+                    peer_vector.push_back(peer_info);
+                    peer_info = strtok(NULL, ","); 
+                }
+                std::string peer_id = sha1(peer_vector[0]+peer_vector[1]);
+                Peer peer(peer_id);
+                if (peer.id != boot_peer->id) {
+                    bool response = peer.ping(port);
+                    if (response) {
+                        bucket.addNode(&peer);
+                    }
+                } else {
+                    bucket.addNode(&peer);
+                }
+                peer_tuple = strtok(NULL, ":");  
+            }
+            routing_table.append(&bucket);
+            return findPeer(peer_id, boot_peer, &bucket);
+        }
+    } else {
+        std::string nearest = nearest_bucket->findClosest(peer_id)->id;
+        if (nearest == boot_peer->id) {
+            return nearest_bucket;
+        }
+        std::string original = nearest;
+        std::vector<Peer*> a_closest = nearest_bucket->findAClosest(peer_id);
+        for (auto &peer : a_closest) {
+            if (peer->id != boot_peer->id) {
+                std::tuple<MsgType, std::string, sockaddr_in> response = boot_peer->findNode(peer_id, port);
+
+                MsgType msg_type;
+                std::string message;
+                sockaddr_in addr;
+                std::tie(msg_type, message, addr) = response;
+
+                if (msg_type == Found) {
+                    KBucket<Peer> bucket;
+                    char* c = const_cast<char*>(message.c_str());
+                    char *peer_tuple;  
+                    peer_tuple = strtok(c, ":");
+                    while (peer_tuple != NULL)  
+                    {  
+                        char *peer_info;  
+                        peer_info = strtok(peer_info, ",");
+                        std::vector<std::string> peer_vector;
+                        while (peer_info != NULL) {
+                            peer_vector.push_back(peer_info);
+                            peer_info = strtok(NULL, ","); 
+                        }
+                        std::string peer_id = sha1(peer_vector[0]+peer_vector[1]);
+                        Peer peer(peer_id);
+                        if (routing_table.findNode(peer.id) != nullptr && peer.id != id) {
+                            bool response = peer.ping(port);
+                            if (response) {
+                                routing_table.addNode(port, &peer);
+                                bucket.addNode(&peer);
+                            }
+                        }
+                        peer_tuple = strtok(NULL, ":");  
+                    }
+                    if (bucket.size() > 0) {
+                        std::string closest = bucket.findClosest(peer_id)->id;
+                        if (hexToInt(closest) < hexToInt(nearest)) {
+                            nearest = closest;
+                            nearest_bucket = &bucket;
+                        }
+                    }
+                }
+            }
+        }
+        if (hexToInt(nearest) < hexToInt(original)) {
+            return findPeer(peer_id, boot_peer, nearest_bucket);
+        }
+    }
+    return nearest_bucket;
+}
+
+File* Beacon::findValue(std::string key) {
+    KBucket<Peer>* closest_bucket = findPeer(key, nullptr, nullptr);
+    File found;
+    for (auto &peer : closest_bucket->preOrder()) {
+        std::tuple<MsgType, std::string, sockaddr_in> response = peer->findValue(key, port);
+        MsgType msg_type;
+        std::string message;
+        sockaddr_in addr;
+        std::tie(msg_type, message, addr) = response;
+        if (msg_type == Found) {
+            char* c = const_cast<char*>(message.c_str());
+            char *file_info;  
+            file_info = strtok(c, ":");
+            std::vector<std::string> file_vector;
+            while (file_info != NULL) {
+                file_vector.push_back(file_info);
+                file_info = strtok(NULL, ":"); 
+            }
+
+            long long int file_size;
+            std::stringstream ss;
+            ss << file_vector[3];
+            ss >> file_size;
+
+            long pub_time;
+            std::stringstream ts;
+            ts << file_vector[4];
+            ts >> pub_time;
+
+            std::string   file_id = file_vector[0];
+            std::string   owner_id = file_vector[1];
+            std::string   filename = file_vector[2];
+            
+            time_t        published_on = pub_time;
+            found.fromTuple(std::tuple<std::string, std::string, std::string, long long int, time_t>(file_id, owner_id, filename, file_size, published_on));
+        }
+    }
+    if (&found.id != nullptr) {
+
+    }
+}
+
+void Beacon::store(std::string) {
+
+}
+
+void Beacon::saveState() {
+
+}
+
+void Beacon::broadcast(Event*) {
+
+}
+
+void Beacon::run() {
+    try
+    {
+        Socket.Bind(port);
+
+        if (boot_port > 0)
+            bootstrap();
+
+        while (true)
+        {
+            std::tuple<MsgType, std::string, sockaddr_in> response = receive();
+
+            MsgType msg_type;
+            std::string message;
+            sockaddr_in addr;
+            std::tie(msg_type, message, addr) = response;
+            
+            if (msg_type == Ping) {
+                std::string peer_address = inet_ntoa(addr.sin_addr);
+                std::string peer_port = std::to_string(addr.sin_port);
+                std::string peer_id = sha1(peer_address+peer_port);
+                
+                send(addr, Pong, "");
+            }
+
+            if (msg_type == FindPeer) {
+                std::string peer_id = message;
+                KBucket<Peer>* bucket = routing_table.findClosest(peer_id);
+                if (bucket == nullptr) {
+                    std::ostringstream msg;
+                    msg << host << "," << port << "," << time(NULL);
+                    send(addr, Found, msg.str());
+                } else {
+                    std::vector<std::tuple<std::string, int, time_t>> found_tuples = bucket->asTuples();
+                    std::ostringstream msg;
+                    for (auto &tup : found_tuples) {
+                        std::string adr;
+                        int prt;
+                        time_t ls;
+                        std::tie(adr, prt, ls) = tup;
+                        msg << adr << "," << prt << "," << ls << ":";
+                    }
+                    msg << host << "," << port << "," << time(NULL);
+                    send(addr, Found, msg.str());
+                }
+
+                std::string peer_address = inet_ntoa(addr.sin_addr);
+                std::string peer_port = std::to_string(addr.sin_port);
+                std::string peer_id = sha1(peer_address+peer_port);
+
+                Peer* found = routing_table.findNode(peer_id);
+                if (found == nullptr) {
+                    routing_table.addNode(port, &Peer(peer_id));
+                }
+            }
+
+            if (msg_type == FindFile) {
+
+            }
+
+            if (msg_type == GetFile) {
+
+            }
+
+            if (msg_type == StoreFile) {
+
+            }
+        }
+    }
+    catch (std::system_error& e)
+    {
+        std::cout << e.what();
+    }
+}

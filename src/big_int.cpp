@@ -1,7 +1,7 @@
 #include "../include/big_int.hpp"
 
 
-BigInt::BigInt(string& s){
+BigInt::BigInt(std::string& s){
 	int n = s.size();
 	for (int i = n - 2; i >= 0; i--){
         std::cout << s[i] << std::endl;
@@ -14,12 +14,14 @@ BigInt::BigInt(string& s){
 	}
     
 }
+
 BigInt::BigInt(unsigned long long nr){
 	do{
 		digits.push_back(nr % 10);
 		nr /= 10;
 	} while (nr);
 }
+
 BigInt::BigInt(const char *s){
 	digits = "";
 	for (int i = strlen(s) - 1; i >= 0;i--)
@@ -32,6 +34,7 @@ BigInt::BigInt(const char *s){
 		digits.push_back(s[i] - '0');
 	}
 }
+
 BigInt::BigInt(BigInt& a){
 	digits = a.digits;
 }
@@ -41,9 +44,11 @@ bool Null(const BigInt& a){
 		return true;
 	return false;
 }
+
 int Length(const BigInt & a){
 	return a.digits.size();
 }
+
 int BigInt::operator[](const int index)const{
 	if(digits.size() <= index || index < 0) {
         printf("ERROR");
@@ -52,12 +57,15 @@ int BigInt::operator[](const int index)const{
 		
 	return digits[index];
 }
+
 bool operator==(const BigInt &a, const BigInt &b){
 	return a.digits == b.digits;
 }
+
 bool operator!=(const BigInt & a, const BigInt &b){
 	return !(a == b);
 }
+
 bool operator<(const BigInt& a, const BigInt& b){
 	int n = Length(a), m = Length(b);
 	if(n != m)
@@ -67,12 +75,15 @@ bool operator<(const BigInt& a, const BigInt& b){
 			return a.digits[n] < b.digits[n];
 	return false;
 }
+
 bool operator>(const BigInt& a, const BigInt& b){
 	return b < a;
 }
+
 bool operator>=(const BigInt& a, const BigInt& b){
 	return !(a < b);
 }
+
 bool operator<=(const BigInt& a, const BigInt& b){
 	return !(a > b);
 }
@@ -92,6 +103,7 @@ BigInt &BigInt::operator++(){
 		digits[i]++;
 	return *this;
 }
+
 BigInt BigInt::operator++(int temp){
 	BigInt aux;
 	aux = *this;
@@ -113,6 +125,7 @@ BigInt &BigInt::operator--(){
 		digits.pop_back();
 	return *this;
 }
+
 BigInt BigInt::operator--(int temp){
 	BigInt aux;
 	aux = *this;
@@ -138,6 +151,7 @@ BigInt &operator+=(BigInt& a,const BigInt& b){
 		a.digits.push_back(t);
 	return a;
 }
+
 BigInt operator+(const BigInt& a, const BigInt& b){
 	BigInt temp;
 	temp = a;
@@ -170,6 +184,7 @@ BigInt &operator-=(BigInt& a,const BigInt& b){
 		n--;
 	return a;
 }
+
 BigInt operator-(const BigInt& a,const BigInt& b){
 	BigInt temp;
 	temp = a;
@@ -184,7 +199,7 @@ BigInt &operator*=(BigInt& a, const BigInt& b)
 		return a;
 	}
 	int n = a.digits.size(), m = b.digits.size();
-	vector<int> v(n + m, 0);
+	std::vector<int> v(n + m, 0);
 	for (int i = 0; i < n;i++)
 		for (int j = 0; j < m;j++){
 			v[i + j] += (a.digits[i] ) * (b.digits[j]);
@@ -202,13 +217,13 @@ BigInt &operator*=(BigInt& a, const BigInt& b)
 			a.digits.pop_back();
 	return a;
 }
+
 BigInt operator*(const BigInt& a, const BigInt& b){
 	BigInt temp;
 	temp = a;
 	temp *= b;
 	return temp;
 }
-
 
 BigInt &operator/=(BigInt& a, const BigInt& b){
 	if(Null(b)) {
@@ -226,7 +241,7 @@ BigInt &operator/=(BigInt& a, const BigInt& b){
 	}
 	int i, lgcat = 0, cc;
 	int n = Length(a), m = Length(b);
-	vector<int> cat(n, 0);
+	std::vector<int> cat(n, 0);
 	BigInt t;
 	for (i = n - 1; t * 10 + a.digits[i] < b;i--){
 		t *= 10;
@@ -244,6 +259,7 @@ BigInt &operator/=(BigInt& a, const BigInt& b){
 	a.digits.resize(lgcat);
 	return a;
 }
+
 BigInt operator/(const BigInt& a, const BigInt& b){
 	BigInt temp;
 	temp = a;
@@ -267,7 +283,7 @@ BigInt &operator%=(BigInt& a, const BigInt& b){
 	}
 	int i, lgcat = 0, cc;
 	int n = Length(a), m = Length(b);
-	vector<int> cat(n, 0);
+	std::vector<int> cat(n, 0);
 	BigInt t;
 	for (i = n - 1; t * 10 + a.digits[i] < b;i--){
 		t *= 10;
@@ -275,13 +291,14 @@ BigInt &operator%=(BigInt& a, const BigInt& b){
 	}
 	for (; i >= 0; i--){
 		t = t * 10 + a.digits[i];
-		for (cc = 9; cc * b > t;cc--);
+		for (cc = 9; cc * b > t; cc--);
 		t -= cc * b;
 		cat[lgcat++] = cc;
 	}
 	a = t;
 	return a;
 }
+
 BigInt operator%(const BigInt& a,BigInt& b){
 	BigInt temp;
 	temp = a;
@@ -301,6 +318,7 @@ BigInt &operator^=(BigInt& a, const BigInt& b){
 	}
 	return a;
 }
+
 BigInt operator^(BigInt& a, BigInt& b){
 	BigInt temp(a);
 	temp ^= b;
@@ -340,8 +358,8 @@ BigInt sqrt(BigInt& a){
 	return v;
 }
 
-istream &operator>>(istream &in, BigInt&a){
-	string s;
+std::istream &operator>>(std::istream &in, BigInt&a){
+	std::string s;
 	in >> s;
 	int n = s.size();
 	for (int i = n - 1; i >= 0;i--){
@@ -355,9 +373,9 @@ istream &operator>>(istream &in, BigInt&a){
 	return in;
 }
 
-ostream &operator<<(ostream &out, const BigInt &a){
+std::ostream &operator<<(std::ostream &out, const BigInt &a){
 	for (int i = a.digits.size() - 1; i >= 0;i--)
-		cout << (short)a.digits[i];
-	return cout;
+		std::cout << (short)a.digits[i];
+	return std::cout;
 }
 

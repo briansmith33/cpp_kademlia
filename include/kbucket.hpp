@@ -3,58 +3,59 @@
 #include <ctime>
 #include "peer.hpp"
 #include "big_int.hpp"
+#include "utils.hpp"
 
+template<typename T>
 struct KBucket {
     KBucket();
 
-    Peer*    root;
+    T*    root;
     KBucket* next;
     KBucket* prev;
     int      k_nodes;
     int      alpha;
 
-    void addPeer(Peer*);
-    void addPeer(Peer*, Peer*);
+    void addNode(T*);
+    void addNode(T*, T*);
 
-    void removePeer(Peer*);
-    Peer* removePeer(Peer*, Peer*);
+    void removeNode(T*);
+    T* removeNode(T*, T*);
 
-    Peer* findPeer(std::string);
-    Peer* findPeer(std::string, Peer*);
+    T* findNode(std::string);
+    T* findNode(std::string, T*);
 
-    Peer* findClosest(std::string);
-    Peer* findClosest(std::string, BigInt, Peer*, Peer*);
+    T* findClosest(std::string);
+    T* findClosest(std::string, BigInt, T*, T*);
 
-    std::vector<Peer*> findAClosest(std::string);
+    std::vector<T*> findAClosest(std::string);
     
-    Peer* min();
-    Peer* min(Peer*);
+    T* min();
+    T* min(T*);
 
-    Peer* max();
-    Peer* max(Peer*);
+    T* max();
+    T* max(T*);
 
     int height();
-    int height(Peer*);
+    int height(T*);
 
     int size();
-    int size(Peer*);
+    int size(T*);
 
     std::tuple<KBucket, KBucket> split();
 
-    std::vector<Peer*> preOrder();
-    std::vector<Peer*> preOrder(std::vector<Peer*>, Peer*);
+    std::vector<T*> preOrder();
+    std::vector<T*> preOrder(std::vector<T*>, T*);
 
-    std::vector<Peer*> inOrder();
-    std::vector<Peer*> inOrder(std::vector<Peer*>, Peer*);
+    std::vector<T*> inOrder();
+    std::vector<T*> inOrder(std::vector<T*>, T*);
 
-    std::vector<Peer*> postOrder();
-    std::vector<Peer*> postOrder(std::vector<Peer*>, Peer*);
+    std::vector<T*> postOrder();
+    std::vector<T*> postOrder(std::vector<T*>, T*);
 
-    std::vector<Peer*> timeSort();
+    std::vector<T*> timeSort();
+    std::vector<T*> timeHeap(std::vector<T*>, int, int);
 
-    std::vector<Peer*> timeHeap(std::vector<Peer*>, int, int);
-
-    Peer* oldest();
+    T* oldest();
 
     std::vector<std::tuple<std::string, int, time_t>> asTuples();
 };

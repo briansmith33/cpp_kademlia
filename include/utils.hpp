@@ -3,13 +3,19 @@
 #include "peer.hpp"
 #include "big_int.hpp"
 
+template<typename T>
 struct Stack {
     Stack();
-    std::vector<Peer*> items;
-    void push(Peer*);
-    Peer* pop();
+
+    std::vector<T*> items;
+
+    void push(T*);
+
+    T* pop();
+
     bool isEmpty();
-    Peer* peek();
+
+    T* peek();
 };
 
 std::string sha256(const std::string str);
@@ -23,3 +29,7 @@ BigInt bigPow(BigInt base, BigInt exponent);
 BigInt bigHexor(std::string hex_str1, std::string hex_str2);
 
 BigInt hexToInt(std::string hex_str);
+
+::std::string base64_encode(const ::std::string &bindata);
+
+::std::string base64_decode(const ::std::string &ascdata);
