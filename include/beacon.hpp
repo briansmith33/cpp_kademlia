@@ -6,13 +6,11 @@
 #include <sstream>
 
 struct Beacon {
-    Beacon();
-    Beacon(int, int);
+    Beacon(char* boot_addr = nullptr);
 
-    std::string         host;
+    char*               host;
     int                 port;
-    std::string         boot_addr;
-    int                 boot_port;
+    char*               boot_addr;
     std::string         id;
     BucketList<Peer>    routing_table;
     BucketList<File>    file_storage;
@@ -20,21 +18,21 @@ struct Beacon {
     int                 buffer_size;
     int                 alpha;
 
-    void send(sockaddr_in, MsgType, std::string);
+    void send(sockaddr_in addr, MsgType msg_type, std::string message);
 
     std::tuple<MsgType, std::string, sockaddr_in> receive();
 
     KBucket<Peer>* bootstrap();
 
-    KBucket<Peer>* findPeer(std::string, Peer*, KBucket<Peer>*);
+    KBucket<Peer>* findPeer(std::string peer_id, Peer* boot_peer = nullptr, KBucket<Peer>* nearest_bucket = nullptr);
 
-    File* findValue(std::string);
+    File* findValue(std::string key);
 
     void store(std::string);
 
     void saveState();
 
-    void broadcast(Event*);
+    void broadcast(Event* event);
 
     void run();
 };

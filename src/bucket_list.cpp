@@ -1,7 +1,9 @@
 #include "../include/bucket_list.hpp"
 
 template<typename T>
-BucketList<T>::BucketList() {}
+BucketList<T>::BucketList() {
+    k_nodes = 20;
+}
 
 template<typename T>
 int BucketList<T>::len() {
@@ -46,7 +48,7 @@ void BucketList<T>::prepend(KBucket<T>* bucket) {
 }
 
 template<typename T>
-void BucketList<T>::addNode(int port, Peer* peer) {
+void BucketList<T>::addNode(Peer* peer) {
     KBucket* bucket = findClosest(peer->id);
     if (bucket == nullptr) {
         *bucket = KBucket();
@@ -58,7 +60,7 @@ void BucketList<T>::addNode(int port, Peer* peer) {
     } else {
         Peer* oldest_peer = bucket->oldest<Peer>();
         if (oldest_peer->isOlderThan(3600)) {
-            bool is_up = oldest_peer->ping(port);
+            bool is_up = oldest_peer->ping();
             if (!is_up) {
                 bucket->removeNode(oldest_peer);
                 bucket->addNode(peer);

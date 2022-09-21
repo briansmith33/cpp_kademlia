@@ -11,26 +11,26 @@ struct BucketList {
 
     int len();
 
-    void append(KBucket<T>*);
+    void append(KBucket<T>* bucket);
 
-    void prepend(KBucket<T>*);
+    void prepend(KBucket<T>* bucket);
 
-    void addNode(int, Peer*);
-    void addNode(File*);
+    void addNode(Peer* peer);
+    void addNode(File* file);
 
-    T* findNode(std::string);
+    T* findNode(std::string node_id);
 
-    void insert(KBucket<T>*);
+    void insert(KBucket<T>* bucket);
 
-    void addAfterNode(std::string, KBucket<T>*);
+    void addAfterNode(std::string node_id, KBucket<T>* bucket);
 
-    void addBeforeNode(std::string, KBucket<T>*);
+    void addBeforeNode(std::string node_id, KBucket<T>* bucket);
 
-    void removeBucket(KBucket<T>*);
+    void removeBucket(KBucket<T>* bucket);
 
-    KBucket<T>* findBucket(std::string);
+    KBucket<T>* findBucket(std::string bucket_id);
 
-    KBucket<T>* findClosest(std::string);
+    KBucket<T>* findClosest(std::string bucket_id);
 
     void reverse();
 

@@ -5,21 +5,24 @@
 
 Peer::Peer() {}
 
-Peer::Peer(std::string ident) {
-    id = ident;
+Peer::Peer(char* addr) {
+    id = sha1(addr);
+    host = addr;
+    port = 4444;
     left = nullptr;
     right = nullptr;
+    buffer_size = 4096;
 }
 
 std::tuple<std::string, int> Peer::address() {
     return std::tuple<std::string, int>(host, port);
 }
 
-std::tuple<std::string, int, time_t> Peer::asTuple() {
-    return std::tuple<std::string, int, time_t>(host, port, last_seen);
+std::tuple<std::string, time_t> Peer::asTuple() {
+    return std::tuple<std::string, time_t>(host, last_seen);
 }
 
-bool Peer::send(int port, MsgType msg_type, std::string message) {
+bool Peer::send(MsgType msg_type, std::string message) {
     try
     {
         WSASession Session;
@@ -95,13 +98,13 @@ std::tuple<MsgType, std::string, sockaddr_in> Peer::receive() {
     return std::tuple<MsgType, std::string, sockaddr_in>(NotFound, "", {0});
 }
 
-std::tuple<MsgType, std::string, sockaddr_in> Peer::sendReceive(int port, MsgType msg_type, std::string message) {
-    send(port, msg_type, message);    
+std::tuple<MsgType, std::string, sockaddr_in> Peer::sendReceive(MsgType msg_type, std::string message) {
+    send(msg_type, message);    
     return receive();
 }
 
-bool Peer::ping(int port) {
-    bool success = send(port, Ping, "");
+bool Peer::ping() {
+    bool success = send(Ping);
     if (!success)
         return false;
 
@@ -117,11 +120,11 @@ bool Peer::ping(int port) {
         return false;
 }
 
-std::tuple<MsgType, std::string, sockaddr_in> Peer::findNode(std::string target, int port) {
-    return sendReceive(port, FindPeer, target);
+std::tuple<MsgType, std::string, sockaddr_in> Peer::findNode(std::string target) {
+    return sendReceive(FindPeer, target);
 }
 
-std::tuple<MsgType, std::string, sockaddr_in> Peer::store(File* file, int port) {
+std::tuple<MsgType, std::string, sockaddr_in> Peer::store(File* file) {
     
     std::string   file_id;
     std::string   owner_id;
@@ -136,15 +139,15 @@ std::tuple<MsgType, std::string, sockaddr_in> Peer::store(File* file, int port) 
     msg << file_id << ":" << owner_id << ":" << filename << ":" << file_size << ":" << published_on;
     
     
-    return sendReceive(port, StoreFile, msg.str());
+    return sendReceive(StoreFile, msg.str());
 }
 
-std::tuple<MsgType, std::string, sockaddr_in> Peer::findValue(std::string target, int port) {
-    return sendReceive(port, FindFile, target);
+std::tuple<MsgType, std::string, sockaddr_in> Peer::findValue(std::string target) {
+    return sendReceive(FindFile, target);
 }
 
-std::tuple<MsgType, std::string, sockaddr_in> Peer::getValue(std::string target, int port) {
-    return sendReceive(port, GetFile, target);
+std::tuple<MsgType, std::string, sockaddr_in> Peer::getValue(std::string target) {
+    return sendReceive(GetFile, target);
 }
 
 bool Peer::isOlderThan(int n_seconds) {

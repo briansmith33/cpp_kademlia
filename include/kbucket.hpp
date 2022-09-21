@@ -15,45 +15,45 @@ struct KBucket {
     int      k_nodes;
     int      alpha;
 
-    void addNode(T*);
-    void addNode(T*, T*);
+    void addNode(T* new_node);
+    void addNode(T* new_node, T* current);
 
-    void removeNode(T*);
-    T* removeNode(T*, T*);
+    void removeNode(T* node);
+    T* removeNode(T* node, T* current);
 
-    T* findNode(std::string);
-    T* findNode(std::string, T*);
+    T* findNode(std::string node_id);
+    T* findNode(std::string node_id, T* current);
 
-    T* findClosest(std::string);
-    T* findClosest(std::string, BigInt, T*, T*);
+    T* findClosest(std::string node_id);
+    T* findClosest(std::string node_id, BigInt distance, T* closest, T* current);
 
-    std::vector<T*> findAClosest(std::string);
+    std::vector<T*> findAClosest(std::string node_id);
     
     T* min();
-    T* min(T*);
+    T* min(T* current);
 
     T* max();
-    T* max(T*);
+    T* max(T* current);
 
     int height();
-    int height(T*);
+    int height(T* current);
 
     int size();
-    int size(T*);
+    int size(T* current);
 
     std::tuple<KBucket, KBucket> split();
 
     std::vector<T*> preOrder();
-    std::vector<T*> preOrder(std::vector<T*>, T*);
+    std::vector<T*> preOrder(std::vector<T*> node_list, T* current);
 
     std::vector<T*> inOrder();
-    std::vector<T*> inOrder(std::vector<T*>, T*);
+    std::vector<T*> inOrder(std::vector<T*> node_list, T* current);
 
     std::vector<T*> postOrder();
-    std::vector<T*> postOrder(std::vector<T*>, T*);
+    std::vector<T*> postOrder(std::vector<T*> node_list, T* current);
 
     std::vector<T*> timeSort();
-    std::vector<T*> timeHeap(std::vector<T*>, int, int);
+    std::vector<T*> timeHeap(std::vector<T*> heap, int n, int i);
 
     T* oldest();
 

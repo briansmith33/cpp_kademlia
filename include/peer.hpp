@@ -11,38 +11,37 @@ enum MsgType {
 
 struct Peer {
     Peer();
-    Peer(std::string id);
+    Peer(char* host);
 
     std::string id;
-    Peer* left;
-    Peer* right;
+    Peer*       left;
+    Peer*       right;
+    char*       host;
+    int         port;
+    time_t      last_seen;
+    int         buffer_size;
 
-    std::string   host;
-    int           port;
-    time_t        last_seen;
-    int           buffer_size;
-
-    std::tuple<std::string, int, time_t> asTuple();
+    std::tuple<std::string, time_t> asTuple();
 
     std::tuple<std::string, int> address();
 
-    bool send(int, MsgType, std::string);
+    bool send(MsgType msg_type, std::string message = "");
 
     std::tuple<MsgType, std::string, sockaddr_in> receive();
 
-    std::tuple<MsgType, std::string, sockaddr_in> sendReceive(int, MsgType, std::string);
+    std::tuple<MsgType, std::string, sockaddr_in> sendReceive(MsgType msg_type, std::string message = "");
 
-    bool ping(int);
+    bool ping();
 
-    std::tuple<MsgType, std::string, sockaddr_in> findNode(std::string, int);
+    std::tuple<MsgType, std::string, sockaddr_in> findNode(std::string target);
 
-    std::tuple<MsgType, std::string, sockaddr_in> store(File*, int);
+    std::tuple<MsgType, std::string, sockaddr_in> store(File* file);
 
-    std::tuple<MsgType, std::string, sockaddr_in> findValue(std::string, int);
+    std::tuple<MsgType, std::string, sockaddr_in> findValue(std::string target);
 
-    std::tuple<MsgType, std::string, sockaddr_in> getValue(std::string, int);
+    std::tuple<MsgType, std::string, sockaddr_in> getValue(std::string target);
 
-    bool isOlderThan(int);
+    bool isOlderThan(int n_seconds);
 
     void print();
 };
