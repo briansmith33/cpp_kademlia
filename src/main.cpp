@@ -8,7 +8,7 @@ int main() {
     
     KBucket<Peer> bucket;
     std::string addr1 = "192.168.1.9";
-    std::string addr2 = "127.0.0.1";
+    std::string addr2 = "192.168.1.8";
     Peer peer1 = Peer(addr1.c_str());
     Peer peer2 = Peer(addr2.c_str());
     bucket.addNode(&peer1);
