@@ -31,8 +31,8 @@ bool Peer::send(MsgType msg_type, std::string message) {
         std::string header = std::to_string(msg_type);
 
         header += ":" + message.size();
-        message = base64_encode(message);
-        header = base64_encode(header);
+        message = base64_encode(message.c_str());
+        header = base64_encode(header.c_str());
         Socket.SendTo(host, port, header.c_str(), header.size());
         Socket.SendTo(host, port, message.c_str(), message.size());
         return true;
@@ -85,7 +85,7 @@ std::tuple<MsgType, std::string, sockaddr_in> Peer::receive() {
 
         std::string message(msg_buffer);
 
-        message = base64_decode(message);
+        message = base64_decode(message.c_str());
 
         return std::tuple<MsgType, std::string, sockaddr_in>(msg_type, message, addr);
     }

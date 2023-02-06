@@ -30,6 +30,10 @@ BigInt bigHexor(std::string hex_str1, std::string hex_str2);
 
 BigInt hexToInt(std::string hex_str);
 
-::std::string base64_encode(const ::std::string &bindata);
+//::std::string base64_encode(const ::std::string &bindata);
 
-::std::string base64_decode(const ::std::string &ascdata);
+//::std::string base64_decode(const ::std::string &ascdata);
+
+char* base64_encode(const char *input);
+
+char* base64_decode(const char *input);

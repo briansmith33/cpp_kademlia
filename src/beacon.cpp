@@ -18,8 +18,8 @@ Beacon::Beacon(char* baddr) {
 void Beacon::send(sockaddr_in addr, MsgType msg_type, std::string message) {
     std::string header = std::to_string(msg_type);
     header += ":" + message.size();
-    message = base64_encode(message);
-    header = base64_encode(message);
+    message = base64_encode(message.c_str());
+    header = base64_encode(message.c_str());
     Socket.SendTo(addr, header.c_str(), header.size());
     Socket.SendTo(addr, message.c_str(), message.size());
 }
@@ -59,7 +59,7 @@ std::tuple<MsgType, std::string, sockaddr_in> Beacon::receive() {
 
     std::string message(msg_buffer);
 
-    message = base64_decode(message);
+    message = base64_decode(message.c_str());
 
     return std::tuple(msg_type, message, addr);
 }
@@ -80,9 +80,10 @@ KBucket<Peer>* Beacon::findPeer(std::string peer_id, Peer* boot_peer, KBucket<Pe
         std::string message;
         sockaddr_in addr;
         std::tie(msg_type, message, addr) = response;
-        if (msg_type == NotFound) {
+        
+        if (msg_type == NotFound)
             return nullptr;
-        }
+
         if (msg_type == Found) {
             KBucket<Peer> bucket;
             char* c = const_cast<char*>(message.c_str());
@@ -349,8 +350,10 @@ void Beacon::run() {
                     file_size, 
                     published_on);
 
-                File* file;
-                file->fromTuple(file_tuple);
+                File file;
+                file.fromTuple(file_tuple);
+                file_storage.addNode(&file);
+                send(addr, Stored);
             }
         }
     }

@@ -311,8 +311,9 @@ BigInt &operator^=(BigInt& a, const BigInt& b){
 	Exponent = b;
 	a = 1;
 	while(!Null(Exponent)){
-		if(Exponent[0] & 1)
+		if(Exponent[0] & 1) {
 			a *= Base;
+		}
 		Base *= Base;
 		divide_by_2(Exponent);
 	}

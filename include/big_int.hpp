@@ -3,9 +3,8 @@
 #include <bits/stdc++.h>
 #pragma once
 
-class BigInt{
+struct BigInt{
 	std::string digits;
-public:
 
 	//Constructors:
 	BigInt(unsigned long long n = 0);
